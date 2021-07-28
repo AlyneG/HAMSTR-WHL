@@ -1,1 +1,1 @@
-# STR-finder
+# HAMSTR-WHL
