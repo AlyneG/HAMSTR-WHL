@@ -1,8 +1,7 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, g, url_for
 import sqlite3
-from flask import g
 from sqlite3 import Error
-from data_reader import extract_data, add_info, test
+from data_reader import extract_data, add_info, get_sample_results
 import os
 
 app = Flask(__name__)
@@ -29,10 +28,10 @@ def close_connection(exception):
         db.close()
 
 @app.route("/")
-def home(name=None):
+def home(database=None):
 	conn = get_db()
-	name = test('/home/alyne/Documents/Thesis/examples_for_alyne/MBXM037256', conn)
-	return render_template("home.html", name=name)
+	database = DATABASE
+	return render_template("home.html", database=database)
 
 @app.route("/add-data", methods=["GET","POST"])
 def add_data(error=None,genes=None):
@@ -45,5 +44,19 @@ def add_data(error=None,genes=None):
 		return render_template("add_sample_data.html", sample=sample, genes=genes)
 	return render_template("add_sample_data.html")
 
+@app.route("/search", methods=["POST","GET"])
+def search():
+	if request.method == 'POST':
+		sample = request.form['sample']
+		return redirect(url_for('get_sample', sample = sample))
+	else:
+		return render_template("search_page.html")
+
+@app.route("/sample/<sample>", methods=["POST","GET"])
+def get_sample(sample):
+	conn = get_db()
+	results = get_sample_results(sample, conn)
+	return render_template("sample_page.html", sample=sample, results=results)
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=105)
+    app.run(debug=True)

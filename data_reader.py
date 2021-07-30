@@ -10,10 +10,8 @@ def create_connection(db_file):
 	conn = None
 	try:
 		conn = sqlite3.connect(db_file)
-
 	except Error as e:
 		print(e)
-
 	return conn
 
 
@@ -103,18 +101,18 @@ def add_info(cur,info, match_motifs):
 			info["cat"] = "Unknown"
 		cur.execute("INSERT INTO Result (sample,gene,pattern,motif,numRepeats,category) VALUES (:sample,:gene_num,:pattern,:motif_id,:count,:cat)", info)
 
-def test(target_dir,conn):
-	if not os.path.isdir(target_dir):
-		conn.close()
-		exit()
-	else:
-		return 'alyne'
+def get_sample_results(sample, conn):
+	cur = conn.cursor()
+	cur.execute("SELECT * from Result WHERE sample LIKE ?", (sample,))
+	results = cur.fetchall()
+	return results
 
 
 def main():
 	conn = create_connection('./database.db')
-	target_dir = '/home/alyne/Documents/Thesis/examples_for_alyne/MBXM037256'
-	extract_data(target_dir, conn)
+	#target_dir = '/home/alyne/Documents/Thesis/examples_for_alyne/MBXM037256'
+	#extract_data(target_dir, conn)
+	get_sample_results('MBXM037256', conn)
 	conn.close()
 
 if __name__ == '__main__':
