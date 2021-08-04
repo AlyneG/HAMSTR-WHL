@@ -1,4 +1,3 @@
-#Take in file path of directory?
 import os
 import re
 import csv
@@ -103,7 +102,7 @@ def add_info(cur,info, match_motifs):
 
 def get_sample_results(sample, conn):
 	cur = conn.cursor()
-	cur.execute("SELECT * from Result WHERE sample LIKE ?", (sample,))
+	cur.execute("SELECT g.name, r.pattern, m.pathMin, m.pathMax, r.numRepeats, r.category FROM Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif m ON r.motif = m.id WHERE r.sample LIKE ?", (sample,))
 	results = cur.fetchall()
 	return results
 

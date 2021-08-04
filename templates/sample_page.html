@@ -5,6 +5,15 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>HAMSTR-WHL Homepage</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.css">
+				<style>
+						table {
+								margin-left: auto;
+								margin-right: auto;
+						}
+						th, td {
+								padding: 15px;
+						}
+				</style>
         <script>
         </script>
     </head>
@@ -15,7 +24,27 @@
         <section class="section has-text-centered">
 						<h1 class="subtitle">{{sample}}</h1>
 						{% if results %}
-								{{results}}}
+								<table>
+								<tr>
+										<th>Gene</th>
+										<th>Motif</th>
+										<th>Pathological Min</th>
+										<th>Pathological Max</th>
+										<th>Number of repeats</th>
+										<th>Category</th>
+								</tr>
+								{% for result in results %}
+										<tr>
+										{% for data in result %}
+											{% if data is not none %}
+													<td>{{data}}</td>
+											{% else %}
+													<td></td>
+											{% endif %}
+										{% endfor %}
+										</tr>
+								{% endfor %}
+								</table>
 						{% endif %}
         </section>
     </body>
