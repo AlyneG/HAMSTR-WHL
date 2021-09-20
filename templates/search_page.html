@@ -14,10 +14,22 @@
         </section>
         <section class="section has-text-centered">
 						<form method="POST">
-								<label for="target_dir">Sample name:</label>
-								<input type="text" id="sample" name="sample">
-								<input type="submit" value="Search">
+								<h1 class="subtitle">Sample Search</h1>
+								<input type="text" class="input" style="width:33%;" id="sample" name="sample" placeholder="Enter a sample number">
+								<input type="submit" class="button" value="Search">
 						</form>
+						{% if error %}
+								<br>
+								<p style="color:hsl(348, 100%, 61%)">{{error}}</p>
+						{% endif %}
         </section>
+        <section class="section has-text-centered">
+					{% if matches %}
+							<h1 class="subtitle">{{num_matches}} matches found for the search term {{sample}}</h1>
+							{% for match in matches %}
+									<a href="/sample/{{match[0]}}"><h1 class="is-link">{{match[0]}}</h1></a>
+							{% endfor %}
+					{% endif %}
+			</section>
     </body>
 </html>

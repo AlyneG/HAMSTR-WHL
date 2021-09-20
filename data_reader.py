@@ -121,7 +121,6 @@ def add_info(cur,info,motif):
 	cur.execute("INSERT INTO Result (sample,gene,pattern,motif,numRepeats,category) VALUES (:sample,:gene_num,:found_pattern,:motif_id,:count,:cat)", info)
 
 def get_sample_results(sample, conn):
-	error = ''
 	cur = conn.cursor()
 	cur.execute("SELECT g.name, r.pattern, m.pattern, m.pathMin, m.pathMax, r.numRepeats, r.category FROM Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif m ON r.motif = m.id WHERE r.sample LIKE ?", (sample,))
 	results = cur.fetchall()
@@ -136,6 +135,12 @@ def generate_variations(pattern):
 		patterns.append("".join(bases[i:]+bases[:i]))
 		i = i + 1
 	return patterns
+
+def find_samples(sample, conn):
+	cur = conn.cursor()
+	cur.execute("SELECT DISTINCT r.sample FROM Result r WHERE r.sample LIKE ?", ('{}%'.format(sample),))
+	results = cur.fetchall()
+	return results
 
 def main():
 	conn = create_connection('./database.db')

@@ -23,8 +23,11 @@
         </section>
         <section class="section has-text-centered">
 						{% if error %}
-								<h1 class="subtitle" style="color:red">{{error}}</h1>
+								<h1 class="subtitle" style="color:hsl(348, 100%, 61%)">{{error}}</h1>
+								<a href="/search"><button class="button">Return to Search</button></a>
 						{% elif results %}
+								<a href="/search"><button class="button">Return to Search</button></a>
+								<br><br>
 								<h1 class="subtitle">{{sample}}</h1>
 								<table>
 								<tr>

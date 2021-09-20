@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, g, url_for
 import sqlite3
 from sqlite3 import Error
-from data_reader import extract_data, add_info, get_sample_results
+from data_reader import extract_data, add_info, get_sample_results, find_samples
 import os
 
 app = Flask(__name__)
@@ -48,7 +48,24 @@ def add_data(error=None,genes=None):
 def search():
 	if request.method == 'POST':
 		sample = request.form['sample']
-		return redirect(url_for('get_sample', sample = sample))
+		if sample:
+			# find how many matches there are
+			conn = get_db()
+			matches = find_samples(sample, conn)
+			num_matches = len(matches)
+			# if none, display error
+			if(num_matches == 0):
+				error = "No results found matching the term "+sample
+				return render_template("search_page.html", error = error)
+			# if only one, return that sample page
+			if(num_matches == 1):
+				return redirect(url_for('get_sample', sample = matches[0]))
+			# else display options with links
+			if(num_matches > 1):
+				return render_template("search_page.html", sample = sample, num_matches = num_matches, matches = matches)
+		else:
+			error = "Please enter a search term"
+			return render_template("search_page.html", error = error)
 	else:
 		return render_template("search_page.html")
 
