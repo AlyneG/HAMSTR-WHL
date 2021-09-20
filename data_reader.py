@@ -43,75 +43,105 @@ def extract_data(target_dir, conn):
 					for row in read_tsv:
 						if(row[0] == 'motif'):
 							continue
-						#get found motif and count
-						info["pattern"] = row[0].split('::')[0] #do we only want the forward? or should we get both?
-						info["reverse_pattern"] = row[0].split('::')[1]
+						#get found pattern, reverse inverse and count
+						info["pattern"] = row[0].split('::')[0]
+						info["rev_inv_pattern"] = row[0].split('::')[1]
 						info["count"] = int(row[2])
-						#check if motif is in database
-						cur.execute("SELECT id, pathMin, pathMax from Motif WHERE gene =:gene_num AND pattern LIKE :pattern", info)
-						match_motifs = cur.fetchall()
+
+						#get all motifs associated with the gene
+						cur.execute("SELECT id, pattern, pathMin, pathMax, gene from Motif WHERE gene =:gene_num", info)
+						motifs = cur.fetchall()
 						found = 0
-						if match_motifs:
-							found = 1
-							add_info(cur,info,match_motifs)
-							print("Matching")
-							print(match_motifs)
-						#check if reverse motif is in database
-						cur.execute("SELECT id, pathMin, pathMax from Motif WHERE gene =:gene_num AND pattern LIKE :reverse_pattern", info)
-						match_motifs = cur.fetchall()
-						if match_motifs:
-							found = 1
-							info["pattern"] = info["reverse_pattern"]
-							add_info(cur,info,match_motifs)
-							print("Matching reverse")
-							print(match_motifs)
+						for motif in motifs:
+							#generate all possibile cyclical variations of the motif
+							variations = generate_variations(motif[1])
+							#find a match
+							if info["pattern"] in variations:
+								found = 1
+								info["found_pattern"] = info["pattern"]
+								add_info(cur,info,motif)
+							if info["rev_inv_pattern"] in variations:
+								found = 1
+								info["found_pattern"] = info["rev_inv_pattern"]
+								add_info(cur,info,motif)
+						#if no match found, insert separately
 						if found == 0:
 							info["cat"] = "Unknown"
 							cur.execute("INSERT INTO Result (sample,gene,pattern,numRepeats,category) VALUES (:sample,:gene_num,:pattern,:count,:cat)", info)
+						# #check if motif is in database
+						# cur.execute("SELECT id, pathMin, pathMax from Motif WHERE gene =:gene_num AND pattern LIKE :pattern", info)
+						# match_motifs = cur.fetchall()
+						# found = 0
+						# if match_motifs:
+						# 	found = 1
+						# 	add_info(cur,info,match_motifs)
+						# 	print("Matching")
+						# 	print(match_motifs)
+						# #check if reverse motif is in database
+						# cur.execute("SELECT id, pathMin, pathMax from Motif WHERE gene =:gene_num AND pattern LIKE :reverse_pattern", info)
+						# match_motifs = cur.fetchall()
+						# if match_motifs:
+						# 	found = 1
+						# 	info["pattern"] = info["reverse_pattern"]
+						# 	add_info(cur,info,match_motifs)
+						# 	print("Matching reverse")
+						# 	print(match_motifs)
+						# if found == 0:
+						# 	info["cat"] = "Unknown"
+						# 	cur.execute("INSERT INTO Result (sample,gene,pattern,numRepeats,category) VALUES (:sample,:gene_num,:pattern,:count,:cat)", info)
 					tsv_file.close()
 					conn.commit()
 					genes.append(info["gene"])
 		return info["sample"], genes
 
-def add_info(cur,info, match_motifs):
-	for motif in match_motifs:
-		count = info["count"]
-		info["motif_id"] = motif[0]
-		pathMin = int(motif[1])
-		pathMax = int(motif[2])
-		if pathMin is not None and pathMax is not None:
-			if count >= pathMin and count <= pathMax: #need to handle when there is no max
-				info["cat"] = "Likely Pathogenic"
-			elif count < pathMin or count > pathMax:
-				info["cat"] = "Likely Non-Pathogenic"
-			else: #change criteria for an abnormal classification
-				info["cat"] = "Abnormal"
-		elif pathMin is not None:
-			if count >= pathMin:
-				info["cat"] = "Likely Pathogenic"
-			else:
-				info["cat"] = "Likely Non-Pathogenic"
-		elif pathMax is not None:
-			if count <= pathMax:
-				info["cat"] = "Likely Pathogenic"
-			else:
-				info["cat"] = "Likely Non-Pathogenic"
+def add_info(cur,info,motif):
+	count = info["count"]
+	info["motif_id"] = motif[0]
+	pathMin = int(motif[2])
+	pathMax = int(motif[3])
+	if pathMin is not None and pathMax is not None:
+		if count >= pathMin and count <= pathMax: #need to handle when there is no max
+			info["cat"] = "Likely Pathogenic"
+		elif count < pathMin or count > pathMax:
+			info["cat"] = "Likely Non-Pathogenic"
+		else: #change criteria for an abnormal classification
+			info["cat"] = "Abnormal"
+	elif pathMin is not None:
+		if count >= pathMin:
+			info["cat"] = "Likely Pathogenic"
 		else:
-			info["cat"] = "Unknown"
-		cur.execute("INSERT INTO Result (sample,gene,pattern,motif,numRepeats,category) VALUES (:sample,:gene_num,:pattern,:motif_id,:count,:cat)", info)
+			info["cat"] = "Likely Non-Pathogenic"
+	elif pathMax is not None:
+		if count <= pathMax:
+			info["cat"] = "Likely Pathogenic"
+		else:
+			info["cat"] = "Likely Non-Pathogenic"
+	else:
+		info["cat"] = "Unknown"
+	cur.execute("INSERT INTO Result (sample,gene,pattern,motif,numRepeats,category) VALUES (:sample,:gene_num,:found_pattern,:motif_id,:count,:cat)", info)
 
 def get_sample_results(sample, conn):
+	error = ''
 	cur = conn.cursor()
-	cur.execute("SELECT g.name, r.pattern, m.pathMin, m.pathMax, r.numRepeats, r.category FROM Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif m ON r.motif = m.id WHERE r.sample LIKE ?", (sample,))
+	cur.execute("SELECT g.name, r.pattern, m.pattern, m.pathMin, m.pathMax, r.numRepeats, r.category FROM Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif m ON r.motif = m.id WHERE r.sample LIKE ?", (sample,))
 	results = cur.fetchall()
 	return results
 
+def generate_variations(pattern):
+	patterns = []
+	length = len(pattern)
+	bases = list(pattern)
+	i = 1
+	while i <= length:
+		patterns.append("".join(bases[i:]+bases[:i]))
+		i = i + 1
+	return patterns
 
 def main():
 	conn = create_connection('./database.db')
-	#target_dir = '/home/alyne/Documents/Thesis/examples_for_alyne/MBXM037256'
-	#extract_data(target_dir, conn)
-	get_sample_results('MBXM037256', conn)
+	target_dir = '/home/alyne/Documents/Thesis/examples_for_alyne/MBXM037256'
+	extract_data(target_dir, conn)
+	#get_sample_results('MBXM037256', conn)
 	conn.close()
 
 if __name__ == '__main__':

@@ -54,9 +54,12 @@ def search():
 
 @app.route("/sample/<sample>", methods=["POST","GET"])
 def get_sample(sample):
+	error = None
 	conn = get_db()
 	results = get_sample_results(sample, conn)
-	return render_template("sample_page.html", sample=sample, results=results)
+	if not results:
+		error = "No results found for "+sample
+	return render_template("sample_page.html", sample=sample, results=results, error=error)
 
 if __name__ == '__main__':
     app.run(debug=True)
