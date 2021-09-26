@@ -24,10 +24,17 @@ CREATE TABLE Motif (
   FOREIGN KEY (gene) REFERENCES Gene(id)
 );
 
+CREATE TABLE Phaser (
+	id INTEGER PRIMARY KEY,
+	name TEXT
+);
+
 CREATE TABLE Result (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	sample VARCHAR(20) NOT NULL,
 	gene INTEGER NOT NULL,
+	allele INTEGER,
+	phaser INTEGER NOT NULL,
 	pattern TEXT NOT NULL,
 	motif INTEGER,
 	numRepeats REAL,
@@ -36,7 +43,8 @@ CREATE TABLE Result (
 	category TEXT CHECK(category IN ('Likely Pathogenic', 'Likely Non-Pathogenic', 'Unknown')) NULL DEFAULT NULL,
 	sequence TEXT,
 	FOREIGN KEY (gene) REFERENCES Gene(id),
-	FOREIGN KEY (motif) REFERENCES Motif(id)
+	FOREIGN KEY (motif) REFERENCES Motif(id),
+	FOREIGN KEY (phaser) REFERENCES Phaser(id)
 );
 
 CREATE TABLE Note (

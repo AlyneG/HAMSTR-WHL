@@ -14,13 +14,12 @@ def create_connection(db_file):
 	return conn
 
 
-def extract_data(target_dir, conn):
+def extract_data(target_dir, conn, phasers):
 	if not os.path.isdir(target_dir):
 		conn.close()
 		exit()
 	else:
 		genes = []
-		cur = conn.cursor()
 		for dirpath in os.listdir(target_dir):
 			#find each gene directory
 			check = re.search("((\w+)_chr\d+_\d+_\d+_(\w+))\.assembly_dir$",dirpath)
@@ -30,71 +29,24 @@ def extract_data(target_dir, conn):
 					"sample" : check.group(2),
 					"gene" : check.group(3)
 				}
-				#find tsv data file for unphased consensus
-				unphased_tsv_filepath = target_dir+'/'+check.group(0)+'/'+check.group(1)+'_unphased.fa.annotated_str.tsv'
-				if os.path.isfile(unphased_tsv_filepath):
-					#find the gene in the database
-					cur.execute("SELECT id, name FROM Gene WHERE name LIKE :gene;", info)
-					gene_data = cur.fetchone()
-					info["gene_num"] = gene_data[0]
-					#extract data from tsv file
-					tsv_file = open(unphased_tsv_filepath)
-					read_tsv = csv.reader(tsv_file, delimiter='\t')
-					for row in read_tsv:
-						if(row[0] == 'motif'):
-							continue
-						#get found pattern, reverse inverse and count
-						info["pattern"] = row[0].split('::')[0]
-						info["rev_inv_pattern"] = row[0].split('::')[1]
-						info["count"] = int(row[2])
-
-						#get all motifs associated with the gene
-						cur.execute("SELECT id, pattern, pathMin, pathMax, gene from Motif WHERE gene =:gene_num", info)
-						motifs = cur.fetchall()
-						found = 0
-						for motif in motifs:
-							#generate all possibile cyclical variations of the motif
-							variations = generate_variations(motif[1])
-							#find a match
-							if info["pattern"] in variations:
-								found = 1
-								info["found_pattern"] = info["pattern"]
-								add_info(cur,info,motif)
-							if info["rev_inv_pattern"] in variations:
-								found = 1
-								info["found_pattern"] = info["rev_inv_pattern"]
-								add_info(cur,info,motif)
-						#if no match found, insert separately
-						if found == 0:
-							info["cat"] = "Unknown"
-							cur.execute("INSERT INTO Result (sample,gene,pattern,numRepeats,category) VALUES (:sample,:gene_num,:pattern,:count,:cat)", info)
-						# #check if motif is in database
-						# cur.execute("SELECT id, pathMin, pathMax from Motif WHERE gene =:gene_num AND pattern LIKE :pattern", info)
-						# match_motifs = cur.fetchall()
-						# found = 0
-						# if match_motifs:
-						# 	found = 1
-						# 	add_info(cur,info,match_motifs)
-						# 	print("Matching")
-						# 	print(match_motifs)
-						# #check if reverse motif is in database
-						# cur.execute("SELECT id, pathMin, pathMax from Motif WHERE gene =:gene_num AND pattern LIKE :reverse_pattern", info)
-						# match_motifs = cur.fetchall()
-						# if match_motifs:
-						# 	found = 1
-						# 	info["pattern"] = info["reverse_pattern"]
-						# 	add_info(cur,info,match_motifs)
-						# 	print("Matching reverse")
-						# 	print(match_motifs)
-						# if found == 0:
-						# 	info["cat"] = "Unknown"
-						# 	cur.execute("INSERT INTO Result (sample,gene,pattern,numRepeats,category) VALUES (:sample,:gene_num,:pattern,:count,:cat)", info)
-					tsv_file.close()
-					conn.commit()
+				found = False
+				for phaser in phasers:
+					info["phaser"] = phaser
+					if phaser == 'sniffles' or phaser == 'longshot':
+						alleles = [1,2]
+						for allele in alleles:
+							file = phaser+"_hap"+str(allele)
+							info["allele"] = allele
+							found = add_info(target_dir,conn,file,allele,check,info)
+					else:
+						allele = 0
+						info["allele"] = allele
+						found = add_info(target_dir,conn,phaser,allele,check,info)
+				if found:
 					genes.append(info["gene"])
 		return info["sample"], genes
 
-def add_info(cur,info,motif):
+def add_motif_match(cur,info,motif):
 	count = info["count"]
 	info["motif_id"] = motif[0]
 	pathMin = int(motif[2])
@@ -118,7 +70,52 @@ def add_info(cur,info,motif):
 			info["cat"] = "Likely Non-Pathogenic"
 	else:
 		info["cat"] = "Unknown"
-	cur.execute("INSERT INTO Result (sample,gene,pattern,motif,numRepeats,category) VALUES (:sample,:gene_num,:found_pattern,:motif_id,:count,:cat)", info)
+	cur.execute("INSERT INTO Result (sample,gene,allele,phaser,pattern,motif,numRepeats,category) VALUES (:sample,:gene_num,:allele,:phaser,:found_pattern,:motif_id,:count,:cat)", info)
+
+def add_info(target_dir,conn,file,allele,check,info):
+	gene_found = False
+	cur = conn.cursor()
+	#find tsv data file for unphased consensus
+	tsv_filepath = target_dir+'/'+check.group(0)+'/'+check.group(1)+'_'+file+'.fa.annotated_str.tsv'
+	if os.path.isfile(tsv_filepath):
+		gene_found = True #need to consider the case the gene is found but no data in the file
+		#find the gene in the database
+		cur.execute("SELECT id, name FROM Gene WHERE name LIKE :gene;", info)
+		gene_data = cur.fetchone()
+		info["gene_num"] = gene_data[0]
+		#extract data from tsv file
+		tsv_file = open(tsv_filepath)
+		read_tsv = csv.reader(tsv_file, delimiter='\t')
+		for row in read_tsv:
+			if(row[0] == 'motif'):
+				continue
+			#get found pattern, reverse inverse and count
+			info["pattern"] = row[0].split('::')[0]
+			info["rev_inv_pattern"] = row[0].split('::')[1]
+			info["count"] = int(row[2])
+			#get all motifs associated with the gene
+			cur.execute("SELECT id, pattern, pathMin, pathMax, gene from Motif WHERE gene =:gene_num", info)
+			motifs = cur.fetchall()
+			found = 0
+			for motif in motifs:
+				#generate all possibile cyclical variations of the motif
+				variations = generate_variations(motif[1])
+				#find a match
+				if info["pattern"] in variations:
+					found = 1
+					info["found_pattern"] = info["pattern"]
+					add_motif_match(cur,info,motif)
+				if info["rev_inv_pattern"] in variations:
+					found = 1
+					info["found_pattern"] = info["rev_inv_pattern"]
+					add_motif_match(cur,info,motif)
+			#if no match found, insert separately
+			if found == 0:
+				info["cat"] = "Unknown"
+				cur.execute("INSERT INTO Result (sample,gene,allele,phaser,pattern,numRepeats,category) VALUES (:sample,:gene_num,:allele,:phaser,:pattern,:count,:cat)", info)
+		tsv_file.close()
+		conn.commit()
+	return gene_found
 
 def get_sample_results(sample, conn):
 	cur = conn.cursor()
