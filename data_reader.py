@@ -119,7 +119,7 @@ def add_info(target_dir,conn,file,allele,check,info):
 
 def get_sample_results(sample, conn):
 	cur = conn.cursor()
-	cur.execute("SELECT g.name, r.pattern, m.pattern, m.pathMin, m.pathMax, r.numRepeats, r.category FROM Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif m ON r.motif = m.id WHERE r.sample LIKE ?", (sample,))
+	cur.execute("SELECT g.name, r.pattern, m.pattern, m.pathMin, m.pathMax, r.numRepeats, r.allele, r.phaser, r.category FROM Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif m ON r.motif = m.id WHERE r.sample LIKE ?", (sample,))
 	results = cur.fetchall()
 	return results
 

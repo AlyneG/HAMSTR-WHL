@@ -10,9 +10,6 @@
 								margin-left: auto;
 								margin-right: auto;
 						}
-						th, td {
-								padding: 15px;
-						}
 				</style>
         <script>
         </script>
@@ -29,34 +26,38 @@
 								<a href="/search"><button class="button">Return to Search</button></a>
 								<br><br>
 								<h1 class="subtitle">{{sample}}</h1>
-								<table>
-								<tr>
-										<th>Gene</th>
-										<th>Pattern</th>
-										<th>Pathological Motif Match</th>
-										<th>Pathological Min</th>
-										<th>Pathological Max</th>
-										<th>Number of repeats</th>
-										<th>Category</th>
-								</tr>
-								{% for result in results %}
-										<tr>
-										{% for data in result %}
-											{% if data is not none %}
-													{% if data == 'Likely Pathogenic' %}
-															<td bgcolor="red" style="color:white">{{data}}</td>
-													{% elif data == 'Unknown' %}
-															<td bgcolor="yellow">{{data}}</td>
-													{% else %}
-															<td>{{data}}</td>
-													{% endif %}
-											{% else %}
-													<td></td>
-											{% endif %}
-										{% endfor %}
-										</tr>
-								{% endfor %}
+								<div class="table-container">
+									<table class="table is-hoverable is-narrow">
+									<tr>
+											<th>Gene</th>
+											<th>Pattern</th>
+											<th>Pathological Motif Match</th>
+											<th>Pathological Min</th>
+											<th>Pathological Max</th>
+											<th>Number of repeats</th>
+											<th>Allele</th>
+											<th>Phaser</th>
+											<th>Category</th>
+									</tr>
+									{% for result in results %}
+											<tr>
+											{% for data in result %}
+												{% if data is not none %}
+														{% if data == 'Likely Pathogenic' %}
+																<td bgcolor="red" style="color:white">{{data}}</td>
+														{% elif data == 'Unknown' %}
+																<td bgcolor="yellow">{{data}}</td>
+														{% else %}
+																<td>{{data}}</td>
+														{% endif %}
+												{% else %}
+														<td></td>
+												{% endif %}
+											{% endfor %}
+											</tr>
+									{% endfor %}
 								</table>
+							</div>
 						{% endif %}
         </section>
     </body>
