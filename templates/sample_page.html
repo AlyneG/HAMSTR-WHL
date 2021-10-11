@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>HAMSTR-WHL Homepage</title>
+        <title>HAMSTR-WHL Sample Page</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.css">
 				<style>
 						table {
@@ -29,6 +29,7 @@
 								<div class="table-container">
 									<table class="table is-hoverable is-narrow">
 									<tr>
+											<th>ID</th>
 											<th>Gene</th>
 											<th>Pattern</th>
 											<th>Pathological Motif Match</th>
@@ -41,19 +42,24 @@
 									</tr>
 									{% for result in results %}
 											<tr>
-											{% for data in result %}
-												{% if data is not none %}
-														{% if data == 'Likely Pathogenic' %}
-																<td bgcolor="red" style="color:white">{{data}}</td>
-														{% elif data == 'Unknown' %}
-																<td bgcolor="yellow">{{data}}</td>
-														{% else %}
-																<td>{{data}}</td>
-														{% endif %}
-												{% else %}
-														<td></td>
-												{% endif %}
-											{% endfor %}
+													<td><a href="/{{result[0]}}">{{result[0]}}</a></td>
+													<td><a href="/{{sample}}/{{result[1]}}">{{result[1]}}</a></td>
+													<td>{{result[2]}}</td>
+													<td>{{result[3]}}</td>
+													<td>{{result[4]}}</td>
+													<td>{{result[5]}}</td>
+													<td>{{result[6]}}</td>
+													<td>{{result[7]}}</td>
+													<td>{{result[8]}}</td>
+													{% if result[9] == 'Likely Pathogenic' %}
+															<td class="is-danger">{{result[9]}}</td>
+													{% elif result[9] == 'Unknown' %}
+															<td class="is-warning">{{result[9]}}</td>
+													{% elif result[9] == 'Likely Non-Pathogenic' %}
+															<td class="is-success">{{result[9]}}</td>
+													{% else %}
+															<td></td>
+													{% endif %}
 											</tr>
 									{% endfor %}
 								</table>

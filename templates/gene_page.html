@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>HAMSTR-WHL Gene Page</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.css">
+				<style>
+						table {
+								margin-left: auto;
+								margin-right: auto;
+						}
+				</style>
+        <script>
+        </script>
+    </head>
+    <body>
+        <section class="section has-text-centered">
+            <a href="/"><h1 class="title">HAMSTR-WHL</h1></a>
+        </section>
+        <section class="section has-text-centered">
+					{% if error %}
+							<h1 class="subtitle" style="color:hsl(348, 100%, 61%)">{{error}}</h1>
+							<a href="/sample/{{sample}}"><button class="button">Return to Sample page {{sample}}</button></a>
+					{% elif results %}
+							<h1 class="title">{{gene}}</h1>
+							<a href="/sample/{{sample}}"><h1 class="subtitle has-text-link">{{sample}}</h1></a><br>
+							<div class="table-container">
+								<table class="table is-hoverable is-narrow">
+								<tr>
+										<th>ID</th>
+										<th>Pattern</th>
+										<th>Pathological Motif Match</th>
+										<th>Pathological Min</th>
+										<th>Pathological Max</th>
+										<th>Number of repeats</th>
+										<th>Allele</th>
+										<th>Phaser</th>
+										<th>Category</th>
+								</tr>
+								{% for result in results %}
+										<tr>
+												<td><a href="/{{result[0]}}">{{result[0]}}</a></td>
+												<td>{{result[1]}}</td>
+												<td>{{result[2]}}</td>
+												<td>{{result[3]}}</td>
+												<td>{{result[4]}}</td>
+												<td>{{result[5]}}</td>
+												<td>{{result[6]}}</td>
+												<td>{{result[7]}}</td>
+												{% if result[8] == 'Likely Pathogenic' %}
+														<td class="is-danger">{{result[8]}}</td>
+												{% elif result[8] == 'Unknown' %}
+														<td class="is-warning">{{result[8]}}</td>
+												{% elif result[8] == 'Likely Non-Pathogenic' %}
+														<td class="is-success">{{result[8]}}</td>
+												{% else %}
+														<td></td>
+												{% endif %}
+										</tr>
+								{% endfor %}
+							</table>
+						</div>
+					{% endif %}
+				</section>
+		</body>

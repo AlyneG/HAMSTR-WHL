@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, redirect, g, url_for
 import sqlite3
 from sqlite3 import Error
-from data_reader import extract_data, add_info, get_sample_results, find_samples
+from data_reader import *
 import os
+import json
 
 app = Flask(__name__)
 
@@ -77,6 +78,36 @@ def get_sample(sample):
 	if not results:
 		error = "No results found for "+sample
 	return render_template("sample_page.html", sample=sample, results=results, error=error)
+
+@app.route("/<sample>/<gene>", methods=["POST","GET"])
+def get_gene(sample,gene):
+	error = None
+	conn = get_db()
+	results = get_sample_gene_results(sample, gene, conn)
+	if not results:
+		error = "No results found for "+sample+" "+gene
+	return render_template("gene_page.html", sample=sample, gene=gene, results=results, error=error)
+
+@app.route("/<result>", methods=["POST","GET"])
+def get_result(result):
+	error = None
+	motif_lo = 0
+	motif_hi = 0
+	count = 0
+	lower_bound = 0
+	upper_bound = 0
+	conn = get_db()
+	result_info = get_sample_result(result, conn)
+	if not result_info:
+		error = "No result entry found for "+result
+	else:
+		motif_lo = result_info[7]
+		motif_hi = result_info[8]
+		count = result_info[5]
+		if motif_lo is not None and motif_hi is not None:
+			lower_bound = motif_lo if motif_lo < count else count
+			upper_bound = motif_hi if motif_hi > count else count
+	return render_template("result_page.html", result=result, result_info=result_info, error=error, motif_lo=json.dumps(motif_lo), motif_hi=json.dumps(motif_hi), count=json.dumps(count), lower_bound=json.dumps(lower_bound), upper_bound=json.dumps(upper_bound))
 
 if __name__ == '__main__':
     app.run(debug=True)

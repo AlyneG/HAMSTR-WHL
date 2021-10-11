@@ -119,7 +119,19 @@ def add_info(target_dir,conn,file,allele,check,info):
 
 def get_sample_results(sample, conn):
 	cur = conn.cursor()
-	cur.execute("SELECT g.name, r.pattern, m.pattern, m.pathMin, m.pathMax, r.numRepeats, r.allele, r.phaser, r.category FROM Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif m ON r.motif = m.id WHERE r.sample LIKE ?", (sample,))
+	cur.execute("SELECT r.id, g.name, r.pattern, m.pattern, m.pathMin, m.pathMax, r.numRepeats, r.allele, r.phaser, r.category FROM Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif m ON r.motif = m.id WHERE r.sample LIKE ?", (sample,))
+	results = cur.fetchall()
+	return results
+
+def get_sample_result(result, conn):
+	cur = conn.cursor()
+	cur.execute("SELECT r.sample, g.name, r.pattern, r.phaser, r.allele, r.numRepeats, m.pattern, m.pathMin, m.pathMax, r.category FROM Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif m ON r.motif = m.id WHERE r.id LIKE ?", (result,))
+	result = cur.fetchone()
+	return result
+
+def get_sample_gene_results(sample, gene, conn):
+	cur = conn.cursor()
+	cur.execute("SELECT r.id, r.pattern, m.pattern, m.pathMin, m.pathMax, r.numRepeats, r.allele, r.phaser, r.category FROM Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif m ON r.motif = m.id WHERE r.sample LIKE ? AND g.name LIKE ?", (sample, gene,))
 	results = cur.fetchall()
 	return results
 
