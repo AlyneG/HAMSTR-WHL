@@ -19,22 +19,22 @@
         </section>
         <section class="section has-text-centered">
 						<form method="POST">
-								<label for="target_dir">Sample directory:</label><br>
-								<input type="text" id="target_dir" name="target_dir"><br>
-								<input type="submit" value="Submit">
+								<h1 class="subtitle">Add new sample data</h1>
+								<input type="text" class="input" style="width:33%;" id="target_dir" name="target_dir" placeholder="Enter the path to the target directory">
+								<input type="submit" class="button" value="Add Data">
 						</form>
 						{% if error %}
-								<p class="help is-danger">{{ error }}</p>
+								<br><p class="has-text-danger">{{ error }}</p>
 						{% endif %}
 						{% if genes and sample %}
 								<br>
-								<p><b>Sample: </b>{{ sample }}<br><b>Found and added data for the following genes: </b></p>
+								<p><b>Sample: </b><a href="/sample/{{sample}}">{{ sample }}</a><br><b>Found and added data for the following genes: </b></p>
 								<p>
 								{% for gene in genes %}
 										{% if loop.index is divisibleby 5 %}
 												<br>
 										{% endif %}
-										{{ gene }}
+										<a href="/{{sample}}/{{gene}}">{{ gene }}</a>
 								{% endfor %}
 								</p>
 						{% endif %}

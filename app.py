@@ -84,11 +84,14 @@ def get_gene(sample,gene):
 	error = None
 	conn = get_db()
 	results = get_sample_gene_results(sample, gene, conn)
-	if not results:
+	gene_info = get_gene_info(gene, conn)
+	if not gene_info:
+		error = "No results found for the gene " + gene + " in the database."
+	elif not results:
 		error = "No results found for "+sample+" "+gene
-	return render_template("gene_page.html", sample=sample, gene=gene, results=results, error=error)
+	return render_template("gene_page.html", sample=sample, gene=gene, results=results, error=error, gene_info=gene_info)
 
-@app.route("/<result>", methods=["POST","GET"])
+@app.route("/result/<result>", methods=["POST","GET"])
 def get_result(result):
 	error = None
 	motif_lo = 0

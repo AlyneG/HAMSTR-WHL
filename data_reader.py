@@ -4,6 +4,9 @@ import csv
 import sqlite3
 from sqlite3 import Error
 
+min_pat_len = 2
+max_pat_len = 15
+
 
 def create_connection(db_file):
 	conn = None
@@ -46,6 +49,7 @@ def extract_data(target_dir, conn, phasers):
 					genes.append(info["gene"])
 		return info["sample"], genes
 
+
 def add_motif_match(cur,info,motif):
 	count = info["count"]
 	info["motif_id"] = motif[0]
@@ -72,7 +76,8 @@ def add_motif_match(cur,info,motif):
 		info["cat"] = "Unknown"
 	cur.execute("INSERT INTO Result (sample,gene,allele,phaser,pattern,motif,numRepeats,category) VALUES (:sample,:gene_num,:allele,:phaser,:found_pattern,:motif_id,:count,:cat)", info)
 
-def add_info(target_dir,conn,file,allele,check,info):
+
+def add_info(target_dir,conn,file,allele,check,info): #need to stop double add of data
 	gene_found = False
 	cur = conn.cursor()
 	#find tsv data file for unphased consensus
@@ -86,11 +91,15 @@ def add_info(target_dir,conn,file,allele,check,info):
 		#extract data from tsv file
 		tsv_file = open(tsv_filepath)
 		read_tsv = csv.reader(tsv_file, delimiter='\t')
+		empty_file = True
 		for row in read_tsv:
-			if(row[0] == 'motif'):
+			if row[0] == 'motif':
 				continue
 			#get found pattern, reverse inverse and count
+			empty_file = False
 			info["pattern"] = row[0].split('::')[0]
+			if len(info["pattern"]) < min_pat_len or len(info["pattern"]) > max_pat_len:
+				continue
 			info["rev_inv_pattern"] = row[0].split('::')[1]
 			info["count"] = int(row[2])
 			#get all motifs associated with the gene
@@ -113,9 +122,14 @@ def add_info(target_dir,conn,file,allele,check,info):
 			if found == 0:
 				info["cat"] = "Unknown"
 				cur.execute("INSERT INTO Result (sample,gene,allele,phaser,pattern,numRepeats,category) VALUES (:sample,:gene_num,:allele,:phaser,:pattern,:count,:cat)", info)
+		if empty_file == True:
+			info["cat"] = "Unknown"
+			cur.execute("INSERT INTO Result (sample,gene,allele,phaser,category) VALUES (:sample,:gene_num,:allele,:phaser,:cat)", info)
+
 		tsv_file.close()
 		conn.commit()
 	return gene_found
+
 
 def get_sample_results(sample, conn):
 	cur = conn.cursor()
@@ -123,17 +137,27 @@ def get_sample_results(sample, conn):
 	results = cur.fetchall()
 	return results
 
+
 def get_sample_result(result, conn):
 	cur = conn.cursor()
 	cur.execute("SELECT r.sample, g.name, r.pattern, r.phaser, r.allele, r.numRepeats, m.pattern, m.pathMin, m.pathMax, r.category FROM Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif m ON r.motif = m.id WHERE r.id LIKE ?", (result,))
 	result = cur.fetchone()
 	return result
 
+
 def get_sample_gene_results(sample, gene, conn):
 	cur = conn.cursor()
 	cur.execute("SELECT r.id, r.pattern, m.pattern, m.pathMin, m.pathMax, r.numRepeats, r.allele, r.phaser, r.category FROM Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif m ON r.motif = m.id WHERE r.sample LIKE ? AND g.name LIKE ?", (sample, gene,))
 	results = cur.fetchall()
 	return results
+
+
+def get_gene_info(gene, conn):
+	cur = conn.cursor()
+	cur.execute("SELECT g.name, g.chromosome, g.phenotype, g.inheritanceMode, g.startCoordHG38, g.endCoordHG38 FROM Gene g WHERE g.name LIKE ?", (gene,))
+	gene_info = cur.fetchone()
+	return gene_info
+
 
 def generate_variations(pattern):
 	patterns = []
@@ -145,11 +169,13 @@ def generate_variations(pattern):
 		i = i + 1
 	return patterns
 
+
 def find_samples(sample, conn):
 	cur = conn.cursor()
 	cur.execute("SELECT DISTINCT r.sample FROM Result r WHERE r.sample LIKE ?", ('{}%'.format(sample),))
 	results = cur.fetchall()
 	return results
+
 
 def main():
 	conn = create_connection('./database.db')
@@ -157,6 +183,7 @@ def main():
 	extract_data(target_dir, conn)
 	#get_sample_results('MBXM037256', conn)
 	conn.close()
+
 
 if __name__ == '__main__':
 	main()

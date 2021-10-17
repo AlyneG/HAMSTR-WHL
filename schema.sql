@@ -35,7 +35,7 @@ CREATE TABLE Result (
 	gene INTEGER NOT NULL,
 	allele INTEGER,
 	phaser INTEGER NOT NULL,
-	pattern TEXT NOT NULL,
+	pattern TEXT,
 	motif INTEGER,
 	numRepeats REAL,
 	match INTEGER,

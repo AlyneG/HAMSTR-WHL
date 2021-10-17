@@ -10,6 +10,9 @@
 								margin-left: auto;
 								margin-right: auto;
 						}
+						.table td {
+								border: none;
+						}
 				</style>
         <script>
         </script>
@@ -22,45 +25,69 @@
 					{% if error %}
 							<h1 class="subtitle" style="color:hsl(348, 100%, 61%)">{{error}}</h1>
 							<a href="/sample/{{sample}}"><button class="button">Return to Sample page {{sample}}</button></a>
-					{% elif results %}
-							<h1 class="title">{{gene}}</h1>
-							<a href="/sample/{{sample}}"><h1 class="subtitle has-text-link">{{sample}}</h1></a><br>
+					{% elif gene_info %}
+							<h1 class="title">{{gene_info[0]}}</h1>
 							<div class="table-container">
-								<table class="table is-hoverable is-narrow">
-								<tr>
-										<th>ID</th>
-										<th>Pattern</th>
-										<th>Pathological Motif Match</th>
-										<th>Pathological Min</th>
-										<th>Pathological Max</th>
-										<th>Number of repeats</th>
-										<th>Allele</th>
-										<th>Phaser</th>
-										<th>Category</th>
-								</tr>
-								{% for result in results %}
+									<table class="table has-text-left">
+											<tr><td><b>Chromosome: </b></td><td>{{gene_info[1]}}</td>
+											<tr><td><b>Phenotype: </b></td><td>{{gene_info[2]}}</td>
+											<tr><td><b>Inheritance Mode: </b></td>
+											{% if gene_info[3] == "AD"%}
+													<td>Autosomal Dominant</td>
+											{% elif gene_info[3] == "AR" %}
+													<td>Autosomal Recessive</td>
+											{% elif gene_info[3] == "XL" %}
+													<td>X-Linked</td>
+											{% elif gene_info[3] == "XL" %}
+													<td>X-Linked</td>
+											{% else %}
+													<td>{{gene_info[3]}}</td>
+											{% endif %}
+											</tr>
+											<tr><td><b>Start Coordinate (HG38): </b></td><td>{{gene_info[4]}}</td><tr>
+											<tr><td><b>End Coordinate (HG38): </b></td><td>{{gene_info[5]}}</td><tr>
+									</table>
+							</div>
+							{% if results %}
+									<br>
+									<a href="/sample/{{sample}}"><h1 class="subtitle has-text-link">{{sample}}</h1></a><br>
+									<div class="table-container">
+										<table class="table is-hoverable is-narrow">
 										<tr>
-												<td><a href="/{{result[0]}}">{{result[0]}}</a></td>
-												<td>{{result[1]}}</td>
-												<td>{{result[2]}}</td>
-												<td>{{result[3]}}</td>
-												<td>{{result[4]}}</td>
-												<td>{{result[5]}}</td>
-												<td>{{result[6]}}</td>
-												<td>{{result[7]}}</td>
-												{% if result[8] == 'Likely Pathogenic' %}
-														<td class="is-danger">{{result[8]}}</td>
-												{% elif result[8] == 'Unknown' %}
-														<td class="is-warning">{{result[8]}}</td>
-												{% elif result[8] == 'Likely Non-Pathogenic' %}
-														<td class="is-success">{{result[8]}}</td>
-												{% else %}
-														<td></td>
-												{% endif %}
+												<th>ID</th>
+												<th>Pattern</th>
+												<th>Pathological Motif Match</th>
+												<th>Pathological Min</th>
+												<th>Pathological Max</th>
+												<th>Number of repeats</th>
+												<th>Allele</th>
+												<th>Phaser</th>
+												<th>Category</th>
 										</tr>
-								{% endfor %}
-							</table>
-						</div>
+										{% for result in results %}
+												<tr>
+														<td><a href="/result/{{result[0]}}">{{result[0]}}</a></td>
+														<td>{{result[1]}}</td>
+														<td>{{result[2]}}</td>
+														<td>{{result[3]}}</td>
+														<td>{{result[4]}}</td>
+														<td>{{result[5]}}</td>
+														<td>{{result[6]}}</td>
+														<td>{{result[7]}}</td>
+														{% if result[8] == 'Likely Pathogenic' %}
+																<td class="is-danger">{{result[8]}}</td>
+														{% elif result[8] == 'Unknown' %}
+																<td class="is-warning">{{result[8]}}</td>
+														{% elif result[8] == 'Likely Non-Pathogenic' %}
+																<td class="is-success">{{result[8]}}</td>
+														{% else %}
+																<td></td>
+														{% endif %}
+												</tr>
+										{% endfor %}
+									</table>
+								</div>
+							{% endif %}
 					{% endif %}
 				</section>
 		</body>
