@@ -25,13 +25,21 @@ def extract_data(target_dir, conn, phasers):
 		genes = []
 		for dirpath in os.listdir(target_dir):
 			#find each gene directory
-			check = re.search("((\w+)_chr\d+_\d+_\d+_(\w+))\.assembly_dir$",dirpath)
+			check = re.search("((\w+)_chr\d+_\d+_\d+_(\w+))\.assembly_dir$", dirpath)
 			if(check):
-				#obtain sample number and gene
+				# obtain sample number and gene
 				info = {
-					"sample" : check.group(2),
 					"gene" : check.group(3)
 				}
+				sample = check.group(2)
+				# check if sample already exists in the database
+				sample_id = get_sample_id(conn, sample)
+				if sample_id is None:
+					cur = conn.cursor()
+					cur.execute("INSERT INTO Sample (sample) VALUES (?);", (sample,))
+					info["sample"] = get_sample_id(conn, sample)
+				else:
+					info["sample"] = sample_id
 				found = False
 				for phaser in phasers:
 					info["phaser"] = phaser
@@ -47,7 +55,7 @@ def extract_data(target_dir, conn, phasers):
 						found = add_info(target_dir,conn,phaser,allele,check,info)
 				if found:
 					genes.append(info["gene"])
-		return info["sample"], genes
+		return sample, genes
 
 
 def add_motif_match(cur,info,motif):
@@ -77,13 +85,13 @@ def add_motif_match(cur,info,motif):
 	cur.execute("INSERT INTO Result (sample,gene,allele,phaser,pattern,motif,numRepeats,category) VALUES (:sample,:gene_num,:allele,:phaser,:found_pattern,:motif_id,:count,:cat)", info)
 
 
-def add_info(target_dir,conn,file,allele,check,info): #need to stop double add of data
+def add_info(target_dir,conn,file,allele,check,info):
 	gene_found = False
 	cur = conn.cursor()
 	#find tsv data file for unphased consensus
 	tsv_filepath = target_dir+'/'+check.group(0)+'/'+check.group(1)+'_'+file+'.fa.annotated_str.tsv'
 	if os.path.isfile(tsv_filepath):
-		gene_found = True #need to consider the case the gene is found but no data in the file
+		gene_found = True
 		#find the gene in the database
 		cur.execute("SELECT id, name FROM Gene WHERE name LIKE :gene;", info)
 		gene_data = cur.fetchone()
@@ -131,7 +139,35 @@ def add_info(target_dir,conn,file,allele,check,info): #need to stop double add o
 	return gene_found
 
 
+def get_sample_count(conn):
+	cur = conn.cursor()
+	cur.execute("SELECT COUNT(DISTINCT sample) FROM Result;")
+	count = cur.fetchone()
+	return count
+
+
+def get_sample_id(conn, sample):
+	cur = conn.cursor()
+	cur.execute("SELECT id FROM Sample WHERE sample LIKE ?;", (sample,))
+	id = cur.fetchone()
+	if id is not None:
+		return id[0]
+	return id
+
+
+def get_gene_id(conn, gene):
+	cur = conn.cursor()
+	cur.execute("SELECT id FROM Gene WHERE name LIKE ?;", (gene,))
+	id = cur.fetchone()
+	if id is not None:
+		return id[0]
+	return id
+
+
 def get_sample_results(sample, conn):
+	sample = get_sample_id(conn, sample)
+	if sample is None:
+		return None
 	cur = conn.cursor()
 	cur.execute("SELECT r.id, g.name, r.pattern, m.pattern, m.pathMin, m.pathMax, r.numRepeats, r.allele, r.phaser, r.category FROM Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif m ON r.motif = m.id WHERE r.sample LIKE ?", (sample,))
 	results = cur.fetchall()
@@ -140,12 +176,15 @@ def get_sample_results(sample, conn):
 
 def get_sample_result(result, conn):
 	cur = conn.cursor()
-	cur.execute("SELECT r.sample, g.name, r.pattern, r.phaser, r.allele, r.numRepeats, m.pattern, m.pathMin, m.pathMax, r.category FROM Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif m ON r.motif = m.id WHERE r.id LIKE ?", (result,))
+	cur.execute("SELECT s.sample, g.name, r.pattern, r.phaser, r.allele, r.numRepeats, m.pattern, m.pathMin, m.pathMax, r.category FROM Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif m ON r.motif = m.id LEFT JOIN Sample s ON r.sample = s.id WHERE r.id LIKE ?", (result,))
 	result = cur.fetchone()
 	return result
 
 
 def get_sample_gene_results(sample, gene, conn):
+	sample = get_sample_id(conn, sample)
+	if sample is None:
+		return None
 	cur = conn.cursor()
 	cur.execute("SELECT r.id, r.pattern, m.pattern, m.pathMin, m.pathMax, r.numRepeats, r.allele, r.phaser, r.category FROM Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif m ON r.motif = m.id WHERE r.sample LIKE ? AND g.name LIKE ?", (sample, gene,))
 	results = cur.fetchall()
@@ -172,16 +211,67 @@ def generate_variations(pattern):
 
 def find_samples(sample, conn):
 	cur = conn.cursor()
-	cur.execute("SELECT DISTINCT r.sample FROM Result r WHERE r.sample LIKE ?", ('{}%'.format(sample),))
+	cur.execute("SELECT DISTINCT sample FROM Sample WHERE sample LIKE ?", ('{}%'.format(sample),))
 	results = cur.fetchall()
 	return results
+
+
+def get_info(conn, sample, gene):
+	sample_id = get_sample_id(conn, sample)
+	if sample_id is None:
+		return None
+	gene_id = get_gene_id(conn, gene)
+	if gene_id is None:
+		return None
+	cur = conn.cursor()
+	cur.execute("SELECT id, note FROM Note WHERE gene LIKE ? AND sample LIKE ?", (gene_id, sample_id,))
+	notes = cur.fetchall()
+	cur.execute("SELECT status, diagnosis FROM Status WHERE gene LIKE ? AND sample LIKE ?", (gene_id, sample_id,))
+	info = cur.fetchone()
+	status = None
+	diagnosis = None
+	if info is not None:
+		status = info[0]
+		diagnosis = info[1]
+	return status, diagnosis, notes
+
+
+def update_status(conn, sample, gene, status, diagnosis):
+	sample_id = get_sample_id(conn, sample)
+	if sample_id is None:
+		return None
+	gene_id = get_gene_id(conn, gene)
+	if gene_id is None:
+		return None
+	cur = conn.cursor()
+	cur.execute("DELETE FROM Status WHERE gene LIKE ? AND sample LIKE ?", (gene_id, sample_id,))
+	# make sure that succeeded
+	cur.execute("INSERT INTO Status (sample, gene, status, diagnosis) VALUES (?, ?, ?, ?)", (sample_id, gene_id, status, diagnosis))
+	conn.commit()
+
+
+def add_note(conn, sample, gene, note):
+	sample_id = get_sample_id(conn, sample)
+	if sample_id is None:
+		return None
+	gene_id = get_gene_id(conn, gene)
+	if gene_id is None:
+		return None
+	cur = conn.cursor()
+	cur.execute("INSERT INTO Note (sample, gene, note) VALUES (?, ?, ?)", (sample_id, gene_id, note))
+	conn.commit()
+
+
+def delete_note(conn, note):
+	cur = conn.cursor()
+	cur.execute("DELETE FROM Note WHERE id LIKE ?", (note,))
+	conn.commit()
 
 
 def main():
 	conn = create_connection('./database.db')
 	target_dir = '/home/alyne/Documents/Thesis/examples_for_alyne/MBXM037256'
-	extract_data(target_dir, conn)
-	#get_sample_results('MBXM037256', conn)
+	extract_data(target_dir, conn, ['unphased','longshot','sniffles'])
 	conn.close()
 
 

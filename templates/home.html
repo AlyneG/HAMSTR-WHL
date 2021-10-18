@@ -6,21 +6,49 @@
         <title>HAMSTR-WHL Homepage</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.css">
         <script>
+					function toggle_help() {
+						var help = document.getElementById("help");
+						var toggle = document.getElementById("help_toggle");
+						if (help.style.display === "none") {
+							help.style.display = "block";
+							toggle.innerHTML = "Close"
+						} else {
+							help.style.display = "none";
+							toggle.innerHTML = "Help"
+						}
+					}
         </script>
     </head>
     <body>
         <section class="section has-text-centered">
-            <a href="/"><h1 class="title">HAMSTR-WHL</h1></a>
+            <a href="/"><h1 class="title is-1">HAMSTR-WHL</h1></a>
         </section>
         <section class="section has-text-centered">
             {% if database %}
                 <p> Connected to database {{database}} </p>
-								<br>
-    						<a href="/add-data"><button class="button">Add Sample Data</button></a>
-								<a href="/search"><button class="button">Search Sample Data</button></a>
+								<p> Number of Samples in the database: {{count[0]}} </p>
+								<br><br><br>
+    						<a href="/add-data"><button class="button is-info">Add Sample Data</button></a>
+								<a href="/search"><button class="button is-info">Search Sample Data</button></a>
             {% else %}
-                <p> Please create a database to connect to </p>
+                <p class="has-text-danger"> Please create a database to connect to. </p>
             {% endif %}
-        </section>
+						<br><br><br><br><button class="button is-info is-light" onclick="toggle_help()" id="help_toggle">Help</button>
+						<div class="columns">
+							<div class="column is-one-third">
+							</div>
+							<div class="column is-one-third">
+								<div id="help" style="display: none" class="has-text-left">
+									<br><br>
+									<h1 class="subtitle"> Setting up the database </h1>
+									<p> Run the script ./initialise_db.sh in your working folder.
+									This should create a database called database.db.
+									The database should then automatically connect to the web application.<p>
+								</div>
+							</div>
+							<div class="column is-one-third">
+							</div>
+						</div>
+				</section>
     </body>
 </html>

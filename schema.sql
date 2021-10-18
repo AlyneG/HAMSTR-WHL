@@ -1,7 +1,10 @@
 DROP TABLE IF EXISTS Gene;
 DROP TABLE IF EXISTS Motif;
+DROP TABLE IF EXISTS Phaser;
+DROP TABLE IF EXISTS Sample;
 DROP TABLE IF EXISTS Result;
 DROP TABLE IF EXISTS Note;
+DROP TABLE IF EXISTS Status;
 
 
 CREATE TABLE Gene (
@@ -29,9 +32,14 @@ CREATE TABLE Phaser (
 	name TEXT
 );
 
+CREATE TABLE Sample (
+	id INTEGER PRIMARY KEY,
+	sample VARCHAR(20)
+);
+
 CREATE TABLE Result (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	sample VARCHAR(20) NOT NULL,
+	sample INTEGER NOT NULL,
 	gene INTEGER NOT NULL,
 	allele INTEGER,
 	phaser INTEGER NOT NULL,
@@ -42,6 +50,7 @@ CREATE TABLE Result (
 	score INTEGER,
 	category TEXT CHECK(category IN ('Likely Pathogenic', 'Likely Non-Pathogenic', 'Unknown')) NULL DEFAULT NULL,
 	sequence TEXT,
+	FOREIGN KEY (sample) REFERENCES Sample(id),
 	FOREIGN KEY (gene) REFERENCES Gene(id),
 	FOREIGN KEY (motif) REFERENCES Motif(id),
 	FOREIGN KEY (phaser) REFERENCES Phaser(id)
@@ -49,9 +58,20 @@ CREATE TABLE Result (
 
 CREATE TABLE Note (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	result INTEGER,
-	status TEXT CHECK(status IN ('In Progress', 'Complete', 'Error')) NOT NULL DEFAULT 'In Progress',
-	diagnosis TEXT CHECK(diagnosis IN ('Pathogenic', 'Non-Pathogenic', 'Unknown')) NOT NULL DEFAULT 'Unknown',
-	notes TEXT,
-	FOREIGN KEY (result) REFERENCES Result(id)
+	sample VARCHAR(20),
+	gene INTEGER,
+	note TEXT,
+	FOREIGN KEY (sample) REFERENCES Sample(id),
+	FOREIGN KEY (gene) REFERENCES Gene(id)
+);
+
+CREATE TABLE Status (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	sample VARCHAR(20),
+	gene INTEGER,
+	status TEXT CHECK(status IN ('In Progress', 'Complete', 'Error')),
+	diagnosis TEXT CHECK(diagnosis IN ('Pathogenic', 'Non-Pathogenic', 'Unknown')),
+	FOREIGN KEY (sample) REFERENCES Sample(id),
+	FOREIGN KEY (gene) REFERENCES Gene(id),
+	CONSTRAINT UC_Status UNIQUE (sample,gene)
 );

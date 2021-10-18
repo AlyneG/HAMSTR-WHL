@@ -29,10 +29,12 @@ def close_connection(exception):
         db.close()
 
 @app.route("/")
-def home(database=None):
-	conn = get_db()
-	database = DATABASE
-	return render_template("home.html", database=database)
+def home(database=None, count=None):
+	if os.path.isfile(DATABASE):
+		conn = get_db()
+		count = get_sample_count(conn)
+		database = DATABASE
+	return render_template("home.html", database=database, count=count)
 
 @app.route("/add-data", methods=["GET","POST"])
 def add_data(error=None,genes=None):
@@ -48,7 +50,7 @@ def add_data(error=None,genes=None):
 @app.route("/search", methods=["POST","GET"])
 def search():
 	if request.method == 'POST':
-		sample = request.form['sample']
+		sample = request.form.get('sample')
 		if sample:
 			# find how many matches there are
 			conn = get_db()
@@ -83,13 +85,29 @@ def get_sample(sample):
 def get_gene(sample,gene):
 	error = None
 	conn = get_db()
-	results = get_sample_gene_results(sample, gene, conn)
+	if request.method == 'POST':
+		type = request.form.get("submit")
+		if type == "Update Status":
+			status = request.form.get("status")
+			diagnosis = request.form.get("diagnosis")
+			update_status(conn, sample, gene, status, diagnosis)
+		elif type == "Add Note":
+			note = request.form.get("note")
+			if note != "":
+				add_note(conn, sample, gene, note)
+		delete = request.form.get("delete")
+		if delete is not None:
+			delete_note(conn, delete)
 	gene_info = get_gene_info(gene, conn)
 	if not gene_info:
 		error = "No results found for the gene " + gene + " in the database."
-	elif not results:
+		return render_template("gene_page.html", sample=sample, gene=gene, error=error)
+	results = get_sample_gene_results(sample, gene, conn)
+	if not results:
 		error = "No results found for "+sample+" "+gene
-	return render_template("gene_page.html", sample=sample, gene=gene, results=results, error=error, gene_info=gene_info)
+		return render_template("gene_page.html", sample=sample, gene=gene, error=error, gene_info=gene_info, results=results)
+	status, diagnosis, notes = get_info(conn, sample, gene)
+	return render_template("gene_page.html", sample=sample, gene=gene, results=results, error=error, gene_info=gene_info, notes=notes, status=status, diagnosis=diagnosis)
 
 @app.route("/result/<result>", methods=["POST","GET"])
 def get_result(result):

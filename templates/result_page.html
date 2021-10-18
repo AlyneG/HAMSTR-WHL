@@ -18,17 +18,6 @@
 			}
 		</style>
     <script>
-			function toggle_note() {
-			  var form = document.getElementById("note_form");
-			  var toggle = document.getElementById("note_toggle");
-			  if (form.style.display === "none") {
-			    form.style.display = "block";
-					toggle.innerHTML = "Cancel"
-			  } else {
-			    form.style.display = "none";
-					toggle.innerHTML = "Add Note"
-			  }
-			}
     </script>
   </head>
   <body>
@@ -42,8 +31,6 @@
 					<a href="/sample/{{sample}}"><button class="button">Return to Sample page {{sample}}</button></a>
 				{% endif %}
 			{% elif result_info %}
-			<div class="columns">
-				<div class="column is-three-quarters">
 					<h1 class="title">{{result}}</h1>
 					<div class="table-container">
 						<table class="table has-text-left">
@@ -57,101 +44,56 @@
 							<tr><td><b>Repeat count: </b></td><td>{{result_info[5]}}</td><tr>
 						</table>
 					</div>
-						{% if result_info[6] is not none %}
-							<h1 class="subtitle">Match found in the database with motif <b>{{result_info[6]}}</b></h1>
-							<canvas id="myCanvas" width="600" height="120"></canvas><br>
-							<script type="text/javascript">
-								var c = document.getElementById("myCanvas");
-								var ctx = c.getContext("2d");
-								ctx.moveTo(50, 70);
-								ctx.lineTo(550, 70);
-								ctx.stroke();
-								ctx.font = "20px Arial";
-								var low = {{motif_lo|safe}};
-								var count = {{count|safe}};
-								var high = {{motif_hi|safe}};
-								var l_bound = {{lower_bound|safe}};
-								var u_bound = {{upper_bound|safe}};
-								var increment = 500/(u_bound-l_bound);
-								ctx.fillStyle = "#FF3860";
-								ctx.fillRect(50+increment*(low-l_bound),65,increment*(high-low),10);
-								ctx.fillStyle = "#000000";
-								ctx.textAlign = "center";
-								ctx.fillText(low, 50+increment*(low-l_bound), 100);
-								ctx.moveTo(50+increment*(low-l_bound), 65);
-								ctx.lineTo(50+increment*(low-l_bound), 75);
-								ctx.stroke();
-								ctx.fillText(high, 50+increment*(high-l_bound), 100);
-								ctx.moveTo(50+increment*(high-l_bound), 65);
-								ctx.lineTo(50+increment*(high-l_bound), 75);
-								ctx.stroke();
-								if (count < low || count > high) {
-										ctx.fillStyle = "#48C774";
-										ctx.fillText("Likely Non-Pathogenic", 300, 15);
-								} else {
-										ctx.fillStyle = "#FF3860";
-										ctx.fillText("Likely Pathogenic", 300, 15);
-								}
-								ctx.font = "22px Arial";
-								ctx.fillText(count, 50+increment*(count-l_bound), 55);
-								ctx.moveTo(50+increment*(count-l_bound), 62);
-								ctx.lineTo(50+increment*(count-l_bound), 78);
-								ctx.stroke();
+					{% if result_info[6] is not none %}
+						<h1 class="subtitle">Match found in the database with motif <b>{{result_info[6]}}</b></h1>
+						<canvas id="myCanvas" width="600" height="120"></canvas><br>
+						<script type="text/javascript">
+							var c = document.getElementById("myCanvas");
+							var ctx = c.getContext("2d");
+							ctx.moveTo(50, 70);
+							ctx.lineTo(550, 70);
+							ctx.stroke();
+							ctx.font = "20px Arial";
+							var low = {{motif_lo|safe}};
+							var count = {{count|safe}};
+							var high = {{motif_hi|safe}};
+							var l_bound = {{lower_bound|safe}};
+							var u_bound = {{upper_bound|safe}};
+							var increment = 500/(u_bound-l_bound);
+							ctx.fillStyle = "#FF3860";
+							ctx.fillRect(50+increment*(low-l_bound),65,increment*(high-low),10);
+							ctx.fillStyle = "#000000";
+							ctx.textAlign = "center";
+							ctx.fillText(low, 50+increment*(low-l_bound), 100);
+							ctx.moveTo(50+increment*(low-l_bound), 65);
+							ctx.lineTo(50+increment*(low-l_bound), 75);
+							ctx.stroke();
+							ctx.fillText(high, 50+increment*(high-l_bound), 100);
+							ctx.moveTo(50+increment*(high-l_bound), 65);
+							ctx.lineTo(50+increment*(high-l_bound), 75);
+							ctx.stroke();
+							if (count < low || count > high) {
+									ctx.fillStyle = "#48C774";
+									ctx.fillText("Likely Non-Pathogenic", 300, 15);
+							} else {
+									ctx.fillStyle = "#FF3860";
+									ctx.fillText("Likely Pathogenic", 300, 15);
+							}
+							ctx.font = "22px Arial";
+							ctx.fillText(count, 50+increment*(count-l_bound), 55);
+							ctx.moveTo(50+increment*(count-l_bound), 62);
+							ctx.lineTo(50+increment*(count-l_bound), 78);
+							ctx.stroke();
 
-								ctx.font = "12px Arial";
-								ctx.fillStyle = "#000000";
-								ctx.fillText("Count", 50+increment*(count-l_bound), 35);
-								ctx.fillText("Pathological Min", 50+increment*(low-l_bound), 112);
-								ctx.fillText("Pathological Max", 50+increment*(high-l_bound), 112);
-							</script>
-						{% else %}
-							<h1 class="subtitle">No matching motif found in the database.</h1>
-						{% endif %}
-					</div>
-					<div class="column has-text-left">
-						<h1 class="subtitle">Notes</h1>
-						{% if notes %}
-							{{notes}}
-						{% endif %}
-						<button class="button" onclick="toggle_note()" id="note_toggle">Add Note</button>
-						<br><br>
-						<div id="note_form" style="display: none">
-							<div class="field">
-								<label class="label">Status</label>
-								<div class="control">
-									<div class="select">
-									  <select>
-									    <option default>In Progress</option>
-									    <option>Complete</option>
-											<option>Error</option>
-									  </select>
-									</div>
-								</div>
-							</div>
-							<div class="field">
-								<label class="label">Diagnosis</label>
-								<div class="control">
-									<div class="select">
-										<select>
-											<option>Pathogenic</option>
-											<option>Non-Pathogenic</option>
-											<option default>Unknown</option>
-										</select>
-									</div>
-								</div>
-							</div>
-							<div class="field">
-								<label class="label">Notes</label>
-								<div class="control">
-									<textarea class="textarea has-fixed-size" placeholder="Add any notes here..."></textarea>
-								</div>
-							</div>
-							<div class="field has-text-right">
-								<button class="button">Add</button>
-							</div>
-						</div>
-					</div>
-				</div>
+							ctx.font = "12px Arial";
+							ctx.fillStyle = "#000000";
+							ctx.fillText("Count", 50+increment*(count-l_bound), 35);
+							ctx.fillText("Pathological Min", 50+increment*(low-l_bound), 112);
+							ctx.fillText("Pathological Max", 50+increment*(high-l_bound), 112);
+						</script>
+					{% else %}
+						<h1 class="subtitle">No matching motif found in the database.</h1>
+					{% endif %}
 			{% endif %}
 		</section>
 	</body>
