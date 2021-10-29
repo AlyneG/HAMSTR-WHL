@@ -5,95 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>HAMSTR-WHL Result Page</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.css">
-		<style>
-			table {
-					margin-left: auto;
-					margin-right: auto;
-			}
-			.table th {
-					border: none;
-			}
-			.table td {
-					border: none;
-			}
-		</style>
-    <script>
-    </script>
+    <style>
+      table {
+      margin-left: auto;
+      margin-right: auto;
+      }
+      .table th {
+      border: none;
+      }
+      .table td {
+      border: none;
+      }
+    </style>
+    <script></script>
   </head>
   <body>
     <section class="section has-text-centered">
-      <a href="/"><h1 class="title">HAMSTR-WHL</h1></a>
+      <a href="/">
+        <h1 class="title">HAMSTR-WHL</h1>
+      </a>
     </section>
-		<section class="section has-text-centered">
-			{% if error %}
-				<h1 class="subtitle" style="color:hsl(348, 100%, 61%)">{{error}}</h1>
-				{% if sample %}
-					<a href="/sample/{{sample}}"><button class="button">Return to Sample page {{sample}}</button></a>
-				{% endif %}
-			{% elif result_info %}
-					<h1 class="title">{{result}}</h1>
-					<div class="table-container">
-						<table class="table has-text-left">
-							<tr><td><b>Sample: </b></td><td><a href="/sample/{{result_info[0]}}">{{result_info[0]}}</a></td>
-							<tr><td><b>Gene: </b></td><td><a href="/{{result_info[0]}}/{{result_info[1]}}">{{result_info[1]}}</a></td>
-							<tr><td><b>Pattern: </b></td><td>{{result_info[2]}}</td></tr>
-							<tr><td><b>Phasing method: </b></td><td>{{result_info[3]}}</td><tr>
-							{% if result_info[3] != 'unphased'%}
-									<tr><td><b>Allele: </b></td><td>{{result_info[4]}}</td><tr>
-							{% endif %}
-							<tr><td><b>Repeat count: </b></td><td>{{result_info[5]}}</td><tr>
-						</table>
-					</div>
-					{% if result_info[6] is not none %}
-						<h1 class="subtitle">Match found in the database with motif <b>{{result_info[6]}}</b></h1>
-						<canvas id="myCanvas" width="600" height="120"></canvas><br>
-						<script type="text/javascript">
-							var c = document.getElementById("myCanvas");
-							var ctx = c.getContext("2d");
-							ctx.moveTo(50, 70);
-							ctx.lineTo(550, 70);
-							ctx.stroke();
-							ctx.font = "20px Arial";
-							var low = {{motif_lo|safe}};
-							var count = {{count|safe}};
-							var high = {{motif_hi|safe}};
-							var l_bound = {{lower_bound|safe}};
-							var u_bound = {{upper_bound|safe}};
-							var increment = 500/(u_bound-l_bound);
-							ctx.fillStyle = "#FF3860";
-							ctx.fillRect(50+increment*(low-l_bound),65,increment*(high-low),10);
-							ctx.fillStyle = "#000000";
-							ctx.textAlign = "center";
-							ctx.fillText(low, 50+increment*(low-l_bound), 100);
-							ctx.moveTo(50+increment*(low-l_bound), 65);
-							ctx.lineTo(50+increment*(low-l_bound), 75);
-							ctx.stroke();
-							ctx.fillText(high, 50+increment*(high-l_bound), 100);
-							ctx.moveTo(50+increment*(high-l_bound), 65);
-							ctx.lineTo(50+increment*(high-l_bound), 75);
-							ctx.stroke();
-							if (count < low || count > high) {
-									ctx.fillStyle = "#48C774";
-									ctx.fillText("Likely Non-Pathogenic", 300, 15);
-							} else {
-									ctx.fillStyle = "#FF3860";
-									ctx.fillText("Likely Pathogenic", 300, 15);
-							}
-							ctx.font = "22px Arial";
-							ctx.fillText(count, 50+increment*(count-l_bound), 55);
-							ctx.moveTo(50+increment*(count-l_bound), 62);
-							ctx.lineTo(50+increment*(count-l_bound), 78);
-							ctx.stroke();
+    <section class="section has-text-centered">
+      {% if error %}
+      <h1 class="subtitle" style="color:hsl(348, 100%, 61%)">{{error}}</h1>
+      {% if sample %}
+      <a href="/sample/{{sample}}"><button class="button">Return to Sample page {{sample}}</button></a>
+      {% endif %}
+      {% elif result_info %}
+      <h1 class="title">{{result}}</h1>
+      <div class="table-container">
+        <table class="table has-text-left">
+          <tr>
+            <td><b>Sample: </b></td>
+            <td><a href="/sample/{{result_info[0]}}">{{result_info[0]}}</a></td>
+          <tr>
+            <td><b>Gene: </b></td>
+            <td><a href="/{{result_info[0]}}/{{result_info[1]}}">{{result_info[1]}}</a></td>
+          <tr>
+            <td><b>Pattern: </b></td>
+            <td>{{result_info[2]}}</td>
+          </tr>
+          <tr>
+            <td><b>Phasing method: </b></td>
+            <td>{{result_info[3]}}</td>
+          <tr>
+            {% if result_info[3] != 'unphased'%}
+          <tr>
+            <td><b>Allele: </b></td>
+            <td>{{result_info[4]}}</td>
+          <tr>
+            {% endif %}
+          <tr>
+            <td><b>Repeat count: </b></td>
+            <td>{{result_info[5]}}</td>
+          <tr>
+        </table>
+      </div>
+      {% if result_info[6] is not none %}
+      <h1 class="subtitle">Match found in the database with motif <b>{{result_info[6]}}</b></h1>
+      <canvas id="myCanvas" width="600" height="120"></canvas>
+      <br>
+      <script type="text/javascript">
+        var c = document.getElementById("myCanvas");
+        var ctx = c.getContext("2d");
+        ctx.moveTo(50, 70);
+        ctx.lineTo(550, 70);
+        ctx.stroke();
+        ctx.font = "20px Arial";
+        var low = {{motif_lo|safe}};
+        var count = {{count|safe}};
+        var high = {{motif_hi|safe}};
+        var l_bound = {{lower_bound|safe}};
+        var u_bound = {{upper_bound|safe}};
+        var increment = 500/(u_bound-l_bound);
+        ctx.fillStyle = "#FF3860";
+        ctx.fillRect(50+increment*(low-l_bound),65,increment*(high-low),10);
+        ctx.fillStyle = "#000000";
+        ctx.textAlign = "center";
+        ctx.fillText(low, 50+increment*(low-l_bound), 100);
+        ctx.moveTo(50+increment*(low-l_bound), 65);
+        ctx.lineTo(50+increment*(low-l_bound), 75);
+        ctx.stroke();
+        ctx.fillText(high, 50+increment*(high-l_bound), 100);
+        ctx.moveTo(50+increment*(high-l_bound), 65);
+        ctx.lineTo(50+increment*(high-l_bound), 75);
+        ctx.stroke();
+        if (count < low || count > high) {
+        		ctx.fillStyle = "#48C774";
+        		ctx.fillText("Likely Non-Pathogenic", 300, 15);
+        } else {
+        		ctx.fillStyle = "#FF3860";
+        		ctx.fillText("Likely Pathogenic", 300, 15);
+        }
+        ctx.font = "22px Arial";
+        ctx.fillText(count, 50+increment*(count-l_bound), 55);
+        ctx.moveTo(50+increment*(count-l_bound), 62);
+        ctx.lineTo(50+increment*(count-l_bound), 78);
+        ctx.stroke();
 
-							ctx.font = "12px Arial";
-							ctx.fillStyle = "#000000";
-							ctx.fillText("Count", 50+increment*(count-l_bound), 35);
-							ctx.fillText("Pathological Min", 50+increment*(low-l_bound), 112);
-							ctx.fillText("Pathological Max", 50+increment*(high-l_bound), 112);
-						</script>
-					{% else %}
-						<h1 class="subtitle">No matching motif found in the database.</h1>
-					{% endif %}
-			{% endif %}
-		</section>
-	</body>
+        ctx.font = "12px Arial";
+        ctx.fillStyle = "#000000";
+        ctx.fillText("Count", 50+increment*(count-l_bound), 35);
+        ctx.fillText("Pathological Min", 50+increment*(low-l_bound), 112);
+        ctx.fillText("Pathological Max", 50+increment*(high-l_bound), 112);
+      </script>
+      {% else %}
+      <h1 class="subtitle">No matching motif found in the database.</h1>
+      {% endif %}
+      {% endif %}
+    </section>
+  </body>

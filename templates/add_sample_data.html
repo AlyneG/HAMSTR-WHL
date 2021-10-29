@@ -1,53 +1,57 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>HAMSTR-WHL add sample data</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.css">
-				<style>
-					table{
-					    margin-left:auto;
-					    margin-right:auto;
-					}
-					.table td {
-							border: none;
-					}
-				</style>
-        <script>
-        </script>
-    </head>
-    <body>
-        <section class="section has-text-centered">
-            <a href="/"><h1 class="title">HAMSTR-WHL</h1></a>
-        </section>
-        <section class="section has-text-centered">
-						<form method="POST">
-								<h1 class="subtitle">Add new sample data</h1>
-								<input type="text" class="input" style="width:33%;" id="target_dir" name="target_dir" placeholder="Enter the path to the target directory">
-								<input type="submit" class="button" value="Add Data">
-						</form>
-						{% if error %}
-							<br><p class="has-text-danger">{{ error }}</p>
-						{% endif %}
-						{% if genes and sample %}
-								<br>
-								<p><b>Sample: </b><a href="/sample/{{sample}}">{{ sample }}</a>
-								<br><br>
-								<b>Found and added data for the following genes: </b></p>
-								<div class="table-container has-text-centred">
-									<table class="table">
-										<tr>
-											{% for gene in genes %}
-												<td><a href="/{{sample}}/{{gene}}">{{ gene }}</a></td>
-												{% if loop.index is divisibleby 5 %}
-													</tr><tr>
-												{% endif %}
-											{% endfor %}
-										</tr>
-									</table>
-								</div>
-						{% endif %}
-        </section>
-    </body>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HAMSTR-WHL add sample data</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.css">
+    <style>
+      table{
+      margin-left:auto;
+      margin-right:auto;
+      }
+      .table td {
+      border: none;
+      }
+    </style>
+    <script></script>
+  </head>
+  <body>
+    <section class="section has-text-centered">
+      <a href="/">
+        <h1 class="title">HAMSTR-WHL</h1>
+      </a>
+    </section>
+    <section class="section has-text-centered">
+      <form method="POST">
+        <h1 class="subtitle">Add new sample data</h1>
+        <input type="text" class="input" style="width:33%;" id="target_dir" name="target_dir" placeholder="Enter the path to the target directory">
+        <input type="submit" class="button" value="Add Data">
+      </form>
+      {% if error %}
+      <br>
+      <p class="has-text-danger">{{ error }}</p>
+      {% endif %}
+      {% if genes and sample %}
+      <br>
+      <p><b>Sample: </b><a href="/sample/{{sample}}">{{ sample }}</a>
+        <br><br>
+        <b>Found and added data for the following genes: </b>
+      </p>
+      <div class="table-container has-text-centred">
+        <table class="table">
+          <tr>
+            {% for gene in genes %}
+            <td><a href="/{{sample}}/{{gene}}">{{ gene }}</a></td>
+            {% if loop.index is divisibleby 5 %}
+          </tr>
+          <tr>
+            {% endif %}
+            {% endfor %}
+          </tr>
+        </table>
+      </div>
+      {% endif %}
+    </section>
+  </body>
 </html>

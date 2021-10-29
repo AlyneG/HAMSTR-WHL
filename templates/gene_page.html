@@ -1,188 +1,209 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>HAMSTR-WHL Gene Page</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.css">
-				<style>
-						table.center {
-								margin-left: auto;
-								margin-right: auto;
-						}
-						.table td {
-								border: none;
-						}
-				</style>
-        <script>
-					function toggle_note() {
-						var form = document.getElementById("note_form");
-						var toggle = document.getElementById("note_toggle");
-						if (form.style.display === "none") {
-							form.style.display = "block";
-							toggle.innerHTML = "Cancel"
-						} else {
-							form.style.display = "none";
-							toggle.innerHTML = "Add Note"
-						}
-					}
-					function toggle_edit() {
-						var form = document.getElementById("status_form");
-						var toggle = document.getElementById("edit_toggle");
-						if (form.style.display === "none") {
-							form.style.display = "block";
-							toggle.innerHTML = "Cancel"
-						} else {
-							form.style.display = "none";
-							toggle.innerHTML = "Edit Status"
-						}
-					}
-        </script>
-    </head>
-    <body>
-      <section class="section has-text-centered">
-        <a href="/"><h1 class="title is-1">HAMSTR-WHL</h1></a>
-      </section>
-      <section class="section has-text-centered">
-				{% if error %}
-					<h1 class="subtitle" style="color:hsl(348, 100%, 61%)">{{error}}</h1>
-					<a href="/sample/{{sample}}"><button class="button">Return to Sample page {{sample}}</button></a>
-				{% elif gene_info %}
-					<div class="columns">
-						<div class="column is-three-quarters">
-							<h1 class="title">{{gene_info[0]}}</h1>
-							<div class="table-container">
-								<table class="table has-text-left center">
-									<tr><td><b>Chromosome: </b></td><td>{{gene_info[1]}}</td>
-									<tr><td><b>Phenotype: </b></td><td>{{gene_info[2]}}</td>
-									<tr><td><b>Inheritance Mode: </b></td>
-									{% if gene_info[3] == "AD"%}
-											<td>Autosomal Dominant</td>
-									{% elif gene_info[3] == "AR" %}
-											<td>Autosomal Recessive</td>
-									{% elif gene_info[3] == "XL" %}
-											<td>X-Linked</td>
-									{% elif gene_info[3] == "XL" %}
-											<td>X-Linked</td>
-									{% else %}
-											<td>{{gene_info[3]}}</td>
-									{% endif %}
-									</tr>
-									<tr><td><b>Start Coordinate (HG38): </b></td><td>{{gene_info[4]}}</td><tr>
-									<tr><td><b>End Coordinate (HG38): </b></td><td>{{gene_info[5]}}</td><tr>
-								</table>
-							</div>
-							{% if results %}
-									<br>
-									<a href="/sample/{{sample}}"><h1 class="subtitle has-text-link">{{sample}}</h1></a><br>
-									<div class="table-container">
-										<table class="table is-hoverable is-narrow center">
-										<tr>
-												<th>ID</th>
-												<th>Pattern</th>
-												<th>Pathological Motif Match</th>
-												<th>Pathological Min</th>
-												<th>Pathological Max</th>
-												<th>Number of repeats</th>
-												<th>Allele</th>
-												<th>Phaser</th>
-												<th>Category</th>
-										</tr>
-										{% for result in results %}
-											<tr>
-												<td><a href="/result/{{result[0]}}">{{result[0]}}</a></td>
-												<td>{{result[1]}}</td>
-												<td>{{result[2]}}</td>
-												<td>{{result[3]}}</td>
-												<td>{{result[4]}}</td>
-												<td>{{result[5]}}</td>
-												<td>{{result[6]}}</td>
-												<td>{{result[7]}}</td>
-												{% if result[8] == 'Likely Pathogenic' %}
-													<td class="is-danger">{{result[8]}}</td>
-												{% elif result[8] == 'Unknown' %}
-													<td class="is-warning">{{result[8]}}</td>
-												{% elif result[8] == 'Likely Non-Pathogenic' %}
-													<td class="is-success">{{result[8]}}</td>
-												{% else %}
-													<td></td>
-												{% endif %}
-											</tr>
-										{% endfor %}
-									</table>
-								</div>
-							{% endif %}
-						</div>
-						<div class="column is-one-quarter">
-							<section class="section has-text-left">
-								<h1 class="title is-4">Status</h1>
-								<table class="table has-text-left is-size-6">
-									<tr><td><b>Status: </b></td><td>{{status}}</td>
-									<tr><td><b>Diagnosis: </b></td><td>{{diagnosis}}</td>
-								</table>
-								<button class="button" onclick="toggle_edit()" id="edit_toggle">Edit Status</button>
-								<br><br>
-								<div id="status_form" style="display: none">
-									<form method="POST">
-										<div class="field">
-											<label class="label">Status</label>
-											<div class="control">
-												<div class="select">
-													<select name="status">
-														<option selected="selected">In Progress</option>
-														<option>Complete</option>
-														<option>Error</option>
-													</select>
-												</div>
-											</div>
-										</div>
-										<div class="field">
-											<label class="label">Diagnosis</label>
-											<div class="control">
-												<div class="select">
-													<select name="diagnosis">
-														<option selected="selected" value="Unknown">Unknown</option>
-														<option value="Pathogenic">Pathogenic</option>
-														<option value="Non-Pathogenic">Non-Pathogenic</option>
-													</select>
-												</div>
-											</div>
-										</div>
-										<div class="field has-text-right">
-											<button class="button" value="Update Status" name="submit" type="submit" formmethod="post">Update</button>
-										</div>
-									</form>
-								</div>
-								<br>
-								<h1 class="title is-4">Notes</h1>
-								<button class="button" onclick="toggle_note()" id="note_toggle">Add Note</button>
-								<br><br>
-								<div id="note_form" style="display: none">
-									<form method="POST">
-										<div class="field">
-											<label class="label">Notes</label>
-											<div class="control">
-												<textarea name="note" class="textarea has-fixed-size" placeholder="Add any notes here..."></textarea>
-											</div>
-										</div>
-										<div class="field has-text-right">
-											<button class="button" name="submit" value="Add Note" type="submit" formmethod="post">Add</button>
-										</div>
-									</form>
-								</div>
-								{% if notes %}
-									{% for note in notes %}
-										<form class="block">
-											<div class="notification">
-											  <button class="delete" value="{{note[0]}}" name="delete" formmethod="post"></button>
-											  	{{note[1]}}
-											</div>
-										</form>
-									{% endfor %}
-								{% endif %}
-							</section>
-						{% endif %}
-					</div>
-				</div>
-			</section>
-		</body>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HAMSTR-WHL Gene Page</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.css">
+    <style>
+      table.center {
+      margin-left: auto;
+      margin-right: auto;
+      }
+      .table td {
+      border: none;
+      }
+    </style>
+    <script>
+      function toggle_note() {
+      	var form = document.getElementById("note_form");
+      	var toggle = document.getElementById("note_toggle");
+      	if (form.style.display === "none") {
+      		form.style.display = "block";
+      		toggle.innerHTML = "Cancel"
+      	} else {
+      		form.style.display = "none";
+      		toggle.innerHTML = "Add Note"
+      	}
+      }
+      function toggle_edit() {
+      	var form = document.getElementById("status_form");
+      	var toggle = document.getElementById("edit_toggle");
+      	if (form.style.display === "none") {
+      		form.style.display = "block";
+      		toggle.innerHTML = "Cancel"
+      	} else {
+      		form.style.display = "none";
+      		toggle.innerHTML = "Edit Status"
+      	}
+      }
+
+    </script>
+  </head>
+  <body>
+    <section class="section has-text-centered">
+      <a href="/">
+        <h1 class="title is-1">HAMSTR-WHL</h1>
+      </a>
+    </section>
+    <section class="section has-text-centered">
+      {% if error %}
+      <h1 class="subtitle" style="color:hsl(348, 100%, 61%)">{{error}}</h1>
+      <a href="/sample/{{sample}}"><button class="button">Return to Sample page {{sample}}</button></a>
+      {% elif gene_info %}
+      <div class="columns">
+        <div class="column is-three-quarters">
+          <h1 class="title">{{gene_info[0]}}</h1>
+          <div class="table-container">
+            <table class="table has-text-left center">
+              <tr>
+                <td><b>Chromosome: </b></td>
+                <td>{{gene_info[1]}}</td>
+              <tr>
+                <td><b>Phenotype: </b></td>
+                <td>{{gene_info[2]}}</td>
+              <tr>
+                <td><b>Inheritance Mode: </b></td>
+                {% if gene_info[3] == "AD"%}
+                <td>Autosomal Dominant</td>
+                {% elif gene_info[3] == "AR" %}
+                <td>Autosomal Recessive</td>
+                {% elif gene_info[3] == "XL" %}
+                <td>X-Linked</td>
+                {% elif gene_info[3] == "XL" %}
+                <td>X-Linked</td>
+                {% else %}
+                <td>{{gene_info[3]}}</td>
+                {% endif %}
+              </tr>
+              <tr>
+                <td><b>Start Coordinate (HG38): </b></td>
+                <td>{{gene_info[4]}}</td>
+              <tr>
+              <tr>
+                <td><b>End Coordinate (HG38): </b></td>
+                <td>{{gene_info[5]}}</td>
+              <tr>
+            </table>
+          </div>
+          {% if results %}
+          <br>
+          <a href="/sample/{{sample}}">
+            <h1 class="subtitle has-text-link">{{sample}}</h1>
+          </a>
+          <br>
+          <div class="table-container">
+            <table class="table is-hoverable is-narrow center">
+              <tr>
+                <th>ID</th>
+                <th>Pattern</th>
+                <th>Pathological Motif Match</th>
+                <th>Pathological Min</th>
+                <th>Pathological Max</th>
+                <th>Number of repeats</th>
+                <th>Allele</th>
+                <th>Phaser</th>
+                <th>Category</th>
+              </tr>
+              {% for result in results %}
+              <tr>
+                <td><a href="/result/{{result[0]}}">{{result[0]}}</a></td>
+                <td>{{result[1]}}</td>
+                <td>{{result[2]}}</td>
+                <td>{{result[3]}}</td>
+                <td>{{result[4]}}</td>
+                <td>{{result[5]}}</td>
+                <td>{{result[6]}}</td>
+                <td>{{result[7]}}</td>
+                {% if result[8] == 'Likely Pathogenic' %}
+                <td class="is-danger">{{result[8]}}</td>
+                {% elif result[8] == 'Unknown' %}
+                <td class="is-warning">{{result[8]}}</td>
+                {% elif result[8] == 'Likely Non-Pathogenic' %}
+                <td class="is-success">{{result[8]}}</td>
+                {% else %}
+                <td></td>
+                {% endif %}
+              </tr>
+              {% endfor %}
+            </table>
+          </div>
+          {% endif %}
+        </div>
+        <div class="column is-one-quarter">
+          <section class="section has-text-left">
+            <h1 class="title is-4">Status</h1>
+            <table class="table has-text-left is-size-6">
+              <tr>
+                <td><b>Status: </b></td>
+                <td>{{status}}</td>
+              <tr>
+                <td><b>Diagnosis: </b></td>
+                <td>{{diagnosis}}</td>
+            </table>
+            <button class="button" onclick="toggle_edit()" id="edit_toggle">Edit Status</button>
+            <br><br>
+            <div id="status_form" style="display: none">
+              <form method="POST">
+                <div class="field">
+                  <label class="label">Status</label>
+                  <div class="control">
+                    <div class="select">
+                      <select name="status">
+                        <option selected="selected">In Progress</option>
+                        <option>Complete</option>
+                        <option>Error</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label">Diagnosis</label>
+                  <div class="control">
+                    <div class="select">
+                      <select name="diagnosis">
+                        <option selected="selected" value="Unknown">Unknown</option>
+                        <option value="Pathogenic">Pathogenic</option>
+                        <option value="Non-Pathogenic">Non-Pathogenic</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="field has-text-right">
+                  <button class="button" value="Update Status" name="submit" type="submit" formmethod="post">Update</button>
+                </div>
+              </form>
+            </div>
+            <br>
+            <h1 class="title is-4">Notes</h1>
+            <button class="button" onclick="toggle_note()" id="note_toggle">Add Note</button>
+            <br><br>
+            <div id="note_form" style="display: none">
+              <form method="POST">
+                <div class="field">
+                  <label class="label">Notes</label>
+                  <div class="control">
+                    <textarea name="note" class="textarea has-fixed-size" placeholder="Add any notes here..."></textarea>
+                  </div>
+                </div>
+                <div class="field has-text-right">
+                  <button class="button" name="submit" value="Add Note" type="submit" formmethod="post">Add</button>
+                </div>
+              </form>
+            </div>
+            {% if notes %}
+            {% for note in notes %}
+            <form class="block">
+              <div class="notification">
+                <button class="delete" value="{{note[0]}}" name="delete" formmethod="post"></button>
+                {{note[1]}}
+              </div>
+            </form>
+            {% endfor %}
+            {% endif %}
+          </section>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  </body>
