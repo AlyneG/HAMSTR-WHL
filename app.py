@@ -43,8 +43,12 @@ def add_data(error=None,genes=None):
 		if not os.path.isdir(target_dir):
 			return render_template("add_sample_data.html", error="Path does not exist")
 		conn = get_db()
-		sample, genes = extract_data(target_dir,conn,['unphased','longshot','sniffles'])
-		return render_template("add_sample_data.html", sample=sample, genes=genes)
+		error = check_add_sample(conn, target_dir)
+		if error is None:
+			sample, genes = extract_data(target_dir,conn,['unphased','longshot','sniffles'])
+			return render_template("add_sample_data.html", sample=sample, genes=genes)
+		else:
+			return render_template("add_sample_data.html", error=error)
 	return render_template("add_sample_data.html")
 
 @app.route("/search", methods=["POST","GET"])

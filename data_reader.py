@@ -26,7 +26,7 @@ def extract_data(target_dir, conn, phasers):
 		for dirpath in os.listdir(target_dir):
 			#find each gene directory
 			check = re.search("((\w+)_chr\d+_\d+_\d+_(\w+))\.assembly_dir$", dirpath)
-			if(check):
+			if check:
 				# obtain sample number and gene
 				info = {
 					"gene" : check.group(3)
@@ -137,6 +137,21 @@ def add_info(target_dir,conn,file,allele,check,info):
 		tsv_file.close()
 		conn.commit()
 	return gene_found
+
+# checks if the sample should be added
+def check_add_sample(conn,target_dir):
+	if not os.path.isdir(target_dir):
+		conn.close()
+		exit()
+	else:
+		for dirpath in os.listdir(target_dir):
+			check = re.search("((\w+)_chr\d+_\d+_\d+_(\w+))\.assembly_dir$", dirpath)
+			if check:
+				sample = check.group(2)
+				if get_sample_id(conn, sample) is not None:
+					return "Sample " + sample + " already exists in the database and cannot be readded."
+				return None
+	return "The folder does not appear to be in the right format."
 
 
 def get_sample_count(conn):
