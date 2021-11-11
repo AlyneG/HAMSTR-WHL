@@ -5,11 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>HAMSTR-WHL Gene Page</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.css">
+    <link rel="stylesheet" href="/static/style.css">
     <style>
-      table.center {
-      margin-left: auto;
-      margin-right: auto;
-      }
       .table td {
       border: none;
       }
@@ -37,12 +34,12 @@
       		toggle.innerHTML = "Edit Status"
       	}
       }
-
     </script>
   </head>
   <body>
     <section class="section has-text-centered">
       <a href="/">
+        <img class="logo" src="/static/logo1.png">
         <h1 class="title is-1">HAMSTR-WHL</h1>
       </a>
     </section>
@@ -94,17 +91,17 @@
           <br>
           <div class="table-container">
             <table class="table is-hoverable is-narrow center">
-              <tr>
-                <th>ID</th>
-                <th>Pattern</th>
-                <th>Pathological Motif Match</th>
-                <th>Pathological Min</th>
-                <th>Pathological Max</th>
-                <th>Number of repeats</th>
-                <th>Allele</th>
-                <th>Phaser</th>
-                <th>Category</th>
-              </tr>
+                <tr>
+                    <th title="Unique Result ID">ID</th>
+                    <th title="Pattern identified by the Phaser">Pattern</th>
+                    <th title="Matching Motif found in the database associated with this Gene">Pathological Motif Match</th>
+                    <th title="Minimum bound of repeats for Pathogenicity">Pathological Min</th>
+                    <th title="Maximum bound of repeats for Pathogenicity">Pathological Max</th>
+                    <th title="Number of repeats of the pattern found in the sample">Num Repeats</th>
+                    <th title="The Allele the pattern was found on, according to the Phaser">Allele</th>
+                    <th title="Phasing method">Phaser</th>
+                    <th title="Pathogenicity, according to the number of repeats found compared to pathological maximum and minimum repeats associated with the matching motif">Category</th>
+                </tr>
               {% for result in results %}
               <tr>
                 <td><a href="/result/{{result[0]}}">{{result[0]}}</a></td>
@@ -116,11 +113,11 @@
                 <td>{{result[6]}}</td>
                 <td>{{result[7]}}</td>
                 {% if result[8] == 'Likely Pathogenic' %}
-                <td class="is-danger">{{result[8]}}</td>
+                <td class="has-background-danger-light has-text-danger">{{result[8]}}</td>
                 {% elif result[8] == 'Unknown' %}
-                <td class="is-warning">{{result[8]}}</td>
+                <td class="has-background-warning-light">{{result[8]}}</td>
                 {% elif result[8] == 'Likely Non-Pathogenic' %}
-                <td class="is-success">{{result[8]}}</td>
+                <td class="has-background-success-light has-text-success">{{result[8]}}</td>
                 {% else %}
                 <td></td>
                 {% endif %}
@@ -136,10 +133,26 @@
             <table class="table has-text-left is-size-6">
               <tr>
                 <td><b>Status: </b></td>
-                <td>{{status}}</td>
+                {% if status == "In Progress"%}
+                    <td class="has-text-warning">In Progress</td>
+                {% elif status == "Complete" %}
+                    <td class="has-text-success">Complete</td>
+                {% elif status == "Error" %}
+                    <td class="has-text-danger">Error</td>
+                {% else %}
+                    <td></td>
+                {% endif %}
               <tr>
                 <td><b>Diagnosis: </b></td>
-                <td>{{diagnosis}}</td>
+                {% if diagnosis == "Pathogenic"%}
+                    <td class="has-text-danger">{{diagnosis}}</td>
+                {% elif diagnosis == "Unknown" %}
+                    <td class="has-text-warning">{{diagnosis}}</td>
+                {% elif diagnosis == "Non-Pathogenic" %}
+                    <td class="has-text-success">{{diagnosis}}</td>
+                {% else %}
+                    <td></td>
+                {% endif %}
             </table>
             <button class="button" onclick="toggle_edit()" id="edit_toggle">Edit Status</button>
             <br><br>
@@ -150,9 +163,9 @@
                   <div class="control">
                     <div class="select">
                       <select name="status">
-                        <option selected="selected">In Progress</option>
-                        <option>Complete</option>
-                        <option>Error</option>
+                        <option selected="selected" class="has-text-warning">In Progress</option>
+                        <option class="has-text-danger">Error</option>
+                        <option class="has-text-success">Complete</option>
                       </select>
                     </div>
                   </div>
@@ -162,9 +175,9 @@
                   <div class="control">
                     <div class="select">
                       <select name="diagnosis">
-                        <option selected="selected" value="Unknown">Unknown</option>
-                        <option value="Pathogenic">Pathogenic</option>
-                        <option value="Non-Pathogenic">Non-Pathogenic</option>
+                        <option selected="selected" value="Unknown" class="has-text-warning">Unknown</option>
+                        <option value="Pathogenic" class="has-text-danger">Pathogenic</option>
+                        <option value="Non-Pathogenic" class="has-text-success">Non-Pathogenic</option>
                       </select>
                     </div>
                   </div>
@@ -190,6 +203,7 @@
                   <button class="button" name="submit" value="Add Note" type="submit" formmethod="post">Add</button>
                 </div>
               </form>
+              <br>
             </div>
             {% if notes %}
             {% for note in notes %}

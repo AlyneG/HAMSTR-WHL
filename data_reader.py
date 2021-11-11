@@ -3,9 +3,8 @@ import re
 import csv
 import sqlite3
 from sqlite3 import Error
-
-min_len = 2
-max_len = 15
+import json
+from collections import OrderedDict
 
 
 def create_connection(db_file):
@@ -17,20 +16,22 @@ def create_connection(db_file):
     return conn
 
 
-def extract_data(target_dir, conn, phasers):
+def extract_data(target_dir, conn):
     if not os.path.isdir(target_dir):
         conn.close()
         exit()
     else:
+        with open('config.json', 'r') as f:
+            cfg = json.load(f, object_pairs_hook=OrderedDict)
         genes = []
         for dirpath in os.listdir(target_dir):
-            #find each gene directory
+            # find each gene directory
             check = re.search("((\w+)_chr\d+_\d+_\d+_(\w+))\.assembly_dir$",
                               dirpath)
             if check:
                 # obtain sample number and gene
                 info = {
-                "gene" : check.group(3)
+                    "gene": check.group(3)
                 }
                 sample = check.group(2)
                 # check if sample already exists in the database
@@ -43,26 +44,26 @@ def extract_data(target_dir, conn, phasers):
                 else:
                     info["sample"] = sample_id
                 found = False
-                for phaser in phasers:
+                for phaser in cfg["phasers"]:
                     info["phaser"] = phaser
-                    if phaser == 'sniffles' or phaser == 'longshot':
-                        alleles = [1,2]
+                    if phaser in cfg["phased"]:
+                        alleles = [1, 2]
                         for allele in alleles:
-                            file = phaser+"_hap"+str(allele)
+                            file = phaser + "_hap" + str(allele)
                             info["allele"] = allele
                             found = add_info(target_dir, conn, file, allele,
-                                             check, info)
+                                             check, info, cfg)
                     else:
                         allele = 0
                         info["allele"] = allele
                         found = add_info(target_dir, conn, phaser, allele,
-                                         check, info)
+                                         check, info, cfg)
                 if found:
                     genes.append(info["gene"])
         return sample, genes
 
 
-def add_motif_match(cur,info,motif):
+def add_motif_match(cur, info, motif):
     count = info["count"]
     info["motif_id"] = motif[0]
     pathMin = int(motif[2])
@@ -72,7 +73,7 @@ def add_motif_match(cur,info,motif):
             info["cat"] = "Likely Pathogenic"
         elif count < pathMin or count > pathMax:
             info["cat"] = "Likely Non-Pathogenic"
-        else: #change criteria for an abnormal classification
+        else:
             info["cat"] = "Abnormal"
     elif pathMin is not None:
         if count >= pathMin:
@@ -86,74 +87,78 @@ def add_motif_match(cur,info,motif):
             info["cat"] = "Likely Non-Pathogenic"
     else:
         info["cat"] = "Unknown"
-    cur.execute("INSERT INTO Result (sample,gene,allele,phaser,pattern,motif," +
-                "numRepeats,category) VALUES (:sample,:gene_num,:allele," +
-                ":phaser,:found_pattern,:motif_id,:count,:cat)", info)
+    cur.execute("INSERT INTO Result (sample,gene,allele,phaser,pattern," +
+                "motif,numRepeats,category) VALUES (:sample,:gene_num," +
+                ":allele,:phaser,:found_pattern,:motif_id,:count,:cat)", info)
 
 
-def add_info(target_dir,conn,file,allele,check,info):
+def add_info(target_dir, conn, file, allele, check, info, cfg):
     gene_found = False
     cur = conn.cursor()
-    #find tsv data file for unphased consensus
+    # find tsv data file for unphased consensus
     tsv_filepath = target_dir + '/' + check.group(0) + '/' + check.group(1)
-    + '_' + file + '.fa.annotated_str.tsv'
+    tsv_filepath = tsv_filepath + '_' + file + '.fa.annotated_str.tsv'
+
+    min_len = cfg["min_pattern_length"]
+    max_len = cfg["max_pattern_length"]
 
     if os.path.isfile(tsv_filepath):
         gene_found = True
-        #find the gene in the database
+        # find the gene in the database
         cur.execute("SELECT id, name FROM Gene WHERE name LIKE :gene;", info)
         gene_data = cur.fetchone()
         info["gene_num"] = gene_data[0]
-        #extract data from tsv file
+        # extract data from tsv file
         tsv_file = open(tsv_filepath)
         read_tsv = csv.reader(tsv_file, delimiter='\t')
         empty_file = True
         for row in read_tsv:
             if row[0] == 'motif':
                 continue
-            #get found pattern, reverse inverse and count
+            # get found pattern, reverse inverse and count
             empty_file = False
             info["pattern"] = row[0].split('::')[0]
             if len(info["pattern"]) < min_len or len(info["pattern"]) > max_len:
                 continue
             info["rev_inv_pattern"] = row[0].split('::')[1]
             info["count"] = int(row[2])
-            #get all motifs associated with the gene
-            cur.execute("SELECT id, pattern, pathMin, pathMax, gene from" +
+            # get all motifs associated with the gene
+            cur.execute("SELECT id, pattern, pathMin, pathMax, gene FROM " +
                         "Motif WHERE gene =:gene_num", info)
             motifs = cur.fetchall()
             found = 0
             for motif in motifs:
-                #generate all possibile cyclical variations of the motif
+                # generate all possibile cyclical variations of the motif
                 variations = generate_variations(motif[1])
-                #find a match
+                # find a match
                 if info["pattern"] in variations:
                     found = 1
                     info["found_pattern"] = info["pattern"]
-                    add_motif_match(cur,info,motif)
+                    add_motif_match(cur, info, motif)
                 if info["rev_inv_pattern"] in variations:
                     found = 1
                     info["found_pattern"] = info["rev_inv_pattern"]
-                    add_motif_match(cur,info,motif)
-            #if no match found, insert separately
+                    add_motif_match(cur, info, motif)
+            # if no match found, insert separately
             if found == 0:
                 info["cat"] = "Unknown"
-                cur.execute("INSERT INTO Result (sample, gene, allele, phaser" +
-                            ", pattern, numRepeats, category) VALUES (:sample" +
-                            ", :gene_num,:allele,:phaser,:pattern,:count,:cat)",
-                            info)
-        if empty_file == True:
+                cur.execute("INSERT INTO Result (sample, gene, allele, " +
+                            "phaser, pattern, numRepeats, category) VALUES " +
+                            "(:sample,:gene_num,:allele,:phaser,:pattern," +
+                            ":count,:cat)", info)
+        if empty_file is True:
             info["cat"] = "Unknown"
             cur.execute("INSERT INTO Result (sample, gene, allele, phaser, " +
-                        "category) VALUES (:sample,:gene_num,:allele,:phaser," +
-                        ":cat)", info)
+                        "category) VALUES (:sample,:gene_num,:allele," +
+                        ":phaser,:cat)", info)
 
         tsv_file.close()
         conn.commit()
     return gene_found
 
+
 # checks if the sample should be added
-def check_add_sample(conn,target_dir):
+def check_add_sample(conn, target_dir):
     if not os.path.isdir(target_dir):
         conn.close()
         exit()
@@ -164,8 +169,7 @@ def check_add_sample(conn,target_dir):
             if check:
                 sample = check.group(2)
                 if get_sample_id(conn, sample) is not None:
-                    return "Sample " + sample + " already exists in the "
-                    + "database and cannot be readded."
+                    return "Sample " + sample + " already exists in the database and cannot be readded."
                 return None
     return "The folder does not appear to be in the right format."
 
@@ -201,9 +205,12 @@ def get_sample_results(sample, conn):
         return None
     cur = conn.cursor()
     cur.execute("SELECT r.id, g.name, r.pattern, m.pattern, m.pathMin, " +
-                "m.pathMax, r.numRepeats, r.allele, r.phaser, r.category FROM" +
-                " Result r LEFT JOIN Gene g ON r.gene = g.id LEFT JOIN Motif" +
-                " m ON r.motif = m.id WHERE r.sample LIKE ?", (sample,))
+                "m.pathMax, r.numRepeats, r.allele, r.phaser, r.category, " +
+                "s.diagnosis, s.status FROM Result r " +
+                "LEFT JOIN Gene g ON r.gene = g.id " +
+                "LEFT JOIN Motif m ON r.motif = m.id " +
+                "LEFT JOIN Status s ON s.gene = g.id AND s.sample = r.sample" +
+                " WHERE r.sample LIKE ?", (sample,))
     results = cur.fetchall()
     return results
 
@@ -235,9 +242,9 @@ def get_sample_gene_results(sample, gene, conn):
 
 def get_gene_info(gene, conn):
     cur = conn.cursor()
-    cur.execute("SELECT g.name, g.chromosome, g.phenotype, g.inheritanceMode," +
-                " g.startCoordHG38, g.endCoordHG38 FROM Gene g WHERE g.name" +
-                " LIKE ?", (gene,))
+    cur.execute("SELECT g.name, g.chromosome, g.phenotype," +
+                "g.inheritanceMode, g.startCoordHG38, g.endCoordHG38 " +
+                "FROM Gene g WHERE g.name LIKE ?", (gene,))
     gene_info = cur.fetchone()
     return gene_info
 
@@ -261,6 +268,14 @@ def find_samples(sample, conn):
     return results
 
 
+def find_gene(gene, conn):
+    cur = conn.cursor()
+    cur.execute("SELECT name FROM Gene WHERE name LIKE ?",
+                ('{}%'.format(gene),))
+    results = cur.fetchall()
+    return results
+
+
 def get_info(conn, sample, gene):
     sample_id = get_sample_id(conn, sample)
     if sample_id is None:
@@ -269,8 +284,8 @@ def get_info(conn, sample, gene):
     if gene_id is None:
         return None
     cur = conn.cursor()
-    cur.execute("SELECT id, note FROM Note WHERE gene LIKE ? AND sample LIKE ?",
-                (gene_id, sample_id,))
+    cur.execute("SELECT id, note FROM Note WHERE gene LIKE ? AND " +
+                "sample LIKE ?", (gene_id, sample_id,))
     notes = cur.fetchall()
     cur.execute("SELECT status, diagnosis FROM Status WHERE gene LIKE ? AND " +
                 "sample LIKE ?", (gene_id, sample_id,))
@@ -294,8 +309,8 @@ def update_status(conn, sample, gene, status, diagnosis):
     cur.execute("DELETE FROM Status WHERE gene LIKE ? AND sample LIKE ?",
                 (gene_id, sample_id,))
     # make sure that succeeded
-    cur.execute("INSERT INTO Status (sample, gene, status, diagnosis) VALUES " +
-                "(?, ?, ?, ?)", (sample_id, gene_id, status, diagnosis))
+    cur.execute("INSERT INTO Status (sample, gene, status, diagnosis) VALUES" +
+                " (?, ?, ?, ?)", (sample_id, gene_id, status, diagnosis))
     conn.commit()
 
 
@@ -321,7 +336,7 @@ def delete_note(conn, note):
 def main():
     conn = create_connection('./database.db')
     target_dir = '/home/alyne/Documents/Thesis/examples_for_alyne/MBXM037256'
-    extract_data(target_dir, conn, ['unphased','longshot','sniffles'])
+    extract_data(target_dir, conn, ['unphased', 'longshot', 'sniffles'])
     conn.close()
 
 

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>HAMSTR-WHL Homepage</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.css">
+    <link rel="stylesheet" href="/static/style.css">
     <script>
       function toggle_help() {
       	var help = document.getElementById("help");
@@ -17,12 +18,14 @@
       		toggle.innerHTML = "Help"
       	}
       }
-
     </script>
+    <style>
+    </style>
   </head>
   <body>
     <section class="section has-text-centered">
       <a href="/">
+        <img class="logo" src="/static/logo1.png">
         <h1 class="title is-1">HAMSTR-WHL</h1>
       </a>
     </section>
@@ -31,8 +34,8 @@
       <p> Connected to database {{database}} </p>
       <p> Number of Samples in the database: {{count[0]}} </p>
       <br><br><br>
-      <a href="/add-data"><button class="button is-info">Add Sample Data</button></a>
-      <a href="/search"><button class="button is-info">Search Sample Data</button></a>
+      <a href="/add-data"><button class="button">Add Sample Data</button></a>
+      <a href="/search"><button class="button">Search Sample Data</button></a>
       {% else %}
       <p class="has-text-danger"> Please create a database to connect to. </p>
       {% endif %}

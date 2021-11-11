@@ -9,11 +9,13 @@ app = Flask(__name__)
 
 DATABASE = './database.db'
 
+
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
         db = g._database = sqlite3.connect(DATABASE)
     return db
+
 
 def init_db():
     with app.app_context():
@@ -22,11 +24,13 @@ def init_db():
             db.cursor().executescript(f.read())
         db.commit()
 
+
 @app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
+
 
 @app.route("/")
 def home(database=None, count=None):
@@ -36,8 +40,9 @@ def home(database=None, count=None):
         database = DATABASE
     return render_template("home.html", database=database, count=count)
 
-@app.route("/add-data", methods=["GET","POST"])
-def add_data(error=None,genes=None):
+
+@app.route("/add-data", methods=["GET", "POST"])
+def add_data(error=None, genes=None):
     if request.method == "POST":
         target_dir = request.form.get('target_dir')
         if not os.path.isdir(target_dir):
@@ -46,15 +51,15 @@ def add_data(error=None,genes=None):
         conn = get_db()
         error = check_add_sample(conn, target_dir)
         if error is None:
-            sample, genes = extract_data(target_dir,conn,
-                                         ['unphased','longshot','sniffles'])
+            sample, genes = extract_data(target_dir, conn)
             return render_template("add_sample_data.html", sample=sample,
                                    genes=genes)
         else:
             return render_template("add_sample_data.html", error=error)
     return render_template("add_sample_data.html")
 
-@app.route("/search", methods=["POST","GET"])
+
+@app.route("/search", methods=["POST", "GET"])
 def search():
     if request.method == 'POST':
         sample = request.form.get('sample')
@@ -65,34 +70,50 @@ def search():
             num_matches = len(matches)
             # if none, display error
             if(num_matches == 0):
-                error = "No results found matching the term "+sample
-                return render_template("search_page.html", error = error)
+                error = "No results found matching the term " + sample
+                return render_template("search_page.html", error=error)
             # if only one, return that sample page
             if(num_matches == 1):
-                return redirect(url_for('get_sample', sample = matches[0]))
+                return redirect(url_for('get_sample', sample=matches[0]))
             # else display options with links
             if(num_matches > 1):
-                return render_template("search_page.html", sample = sample,
-                                       num_matches = num_matches,
-                                       matches = matches)
+                return render_template("search_page.html", sample=sample,
+                                       num_matches=num_matches,
+                                       matches=matches)
         else:
             error = "Please enter a search term"
-            return render_template("search_page.html", error = error)
+            return render_template("search_page.html", error=error)
     else:
         return render_template("search_page.html")
 
-@app.route("/sample/<sample>", methods=["POST","GET"])
+
+@app.route("/sample/<sample>", methods=["POST", "GET"])
 def get_sample(sample):
     error = None
+    search_error = None
+    gene_results = None
     conn = get_db()
+    if request.method == 'POST':
+        gene = request.form.get("gene")
+        if gene is not None:
+            gene_results = find_gene(gene, conn)
+            num_genes = len(gene_results)
+            if(num_genes == 0):
+                search_error = "No results found matching the gene " + gene
+            if(num_genes == 1):
+                return redirect(url_for('get_gene', sample=sample, gene=gene_results[0]))
+        else:
+            search_error = "Please enter a gene to search for"
     results = get_sample_results(sample, conn)
     if not results:
-        error = "No results found for "+sample
+        error = "No results found for " + sample
     return render_template("sample_page.html", sample=sample, results=results,
-                           error=error)
+                           error=error, search_error=search_error,
+                           gene_results=gene_results)
 
-@app.route("/<sample>/<gene>", methods=["POST","GET"])
-def get_gene(sample,gene):
+
+@app.route("/<sample>/<gene>", methods=["POST", "GET"])
+def get_gene(sample, gene):
     error = None
     conn = get_db()
     if request.method == 'POST':
@@ -124,7 +145,8 @@ def get_gene(sample,gene):
                            results=results, error=error, gene_info=gene_info,
                            notes=notes, status=status, diagnosis=diagnosis)
 
-@app.route("/result/<result>", methods=["POST","GET"])
+
+@app.route("/result/<result>", methods=["POST", "GET"])
 def get_result(result):
     error = None
     motif_lo = 0
@@ -150,6 +172,7 @@ def get_result(result):
                            count=json.dumps(count),
                            lower_bound=json.dumps(lower_bound),
                            upper_bound=json.dumps(upper_bound))
+
 
 if __name__ == '__main__':
     app.run(debug=True)

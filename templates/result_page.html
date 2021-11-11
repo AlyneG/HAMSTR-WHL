@@ -5,11 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>HAMSTR-WHL Result Page</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.css">
+    <link rel="stylesheet" href="/static/style.css">
     <style>
-      table {
-      margin-left: auto;
-      margin-right: auto;
-      }
       .table th {
       border: none;
       }
@@ -21,9 +18,10 @@
   </head>
   <body>
     <section class="section has-text-centered">
-      <a href="/">
-        <h1 class="title">HAMSTR-WHL</h1>
-      </a>
+        <a href="/">
+          <img class="logo" src="/static/logo1.png">
+          <h1 class="title is-1">HAMSTR-WHL</h1>
+        </a>
     </section>
     <section class="section has-text-centered">
       {% if error %}
@@ -34,7 +32,7 @@
       {% elif result_info %}
       <h1 class="title">{{result}}</h1>
       <div class="table-container">
-        <table class="table has-text-left">
+        <table class="table has-text-left center">
           <tr>
             <td><b>Sample: </b></td>
             <td><a href="/sample/{{result_info[0]}}">{{result_info[0]}}</a></td>

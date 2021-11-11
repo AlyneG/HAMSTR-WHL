@@ -67,7 +67,7 @@ CREATE TABLE Note (
 
 CREATE TABLE Status (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	sample VARCHAR(20),
+	sample INTEGER,
 	gene INTEGER,
 	status TEXT CHECK(status IN ('In Progress', 'Complete', 'Error')),
 	diagnosis TEXT CHECK(diagnosis IN ('Pathogenic', 'Non-Pathogenic', 'Unknown')),

@@ -1,0 +1,6 @@
+{
+    "phasers": ["unphased", "longshot", "sniffles"],
+    "phased": ["longshot", "sniffles"],
+    "min_pattern_length": 3,
+    "max_pattern_length": 15
+}

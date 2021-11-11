@@ -1,0 +1,9 @@
+img.logo {
+    width: 100px;
+    height: 100px;
+}
+
+table.center {
+    margin-left: auto;
+    margin-right: auto;
+}

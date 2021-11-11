@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>HAMSTR-WHL Sample Page</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.css">
+    <link rel="stylesheet" href="/static/style.css">
     <style>
-      table {
+      .columns {
       margin-left: auto;
       margin-right: auto;
       }
@@ -15,9 +16,10 @@
   </head>
   <body>
     <section class="section has-text-centered">
-      <a href="/">
-        <h1 class="title">HAMSTR-WHL</h1>
-      </a>
+        <a href="/">
+          <img class="logo" src="/static/logo1.png">
+          <p class="title is-1">HAMSTR-WHL</p>
+        </a>
     </section>
     <section class="section has-text-centered">
       {% if error %}
@@ -25,41 +27,105 @@
       <a href="/search"><button class="button">Return to Search</button></a>
       {% elif results %}
       <a href="/search"><button class="button">Return to Search</button></a>
-      <br><br>
-      <h1 class="subtitle">{{sample}}</h1>
+      <br><br><br>
+      <h1 class="title is-3">{{sample}}</h1>
+      <p>
+      Navigate to a <b>Result page</b> by clicking the <b>ID</b>.
+      <br>Navigate to a <b>Gene page</b> by clicking the <b>Gene Name</b>.
+      <br><b>Hover</b> over each column name for more information.
+      </p>
+      <br>
+      <form method="POST">
+        <h1 class="title is-5">Gene Search</h1>
+        <input type="text" class="input" style="width:33%;" id="gene" name="gene" placeholder="Enter a Gene">
+        <input type="submit" class="button" value="Search">
+      </form>
+      {% if search_error %}
+      <br>
+      <p class="has-text-danger">{{search_error}}</p>
+      {% endif %}
+      {% if gene_results %}
+      <br>
+      {% for gene in gene_results %}
+      <a href="/{{sample}}/{{gene[0]}}">
+        <p class="is-link">{{gene[0]}}</p>
+      </a>
+      {% endfor %}
+      {% endif %}
+      <br>
+      <br>
+      <div class="columns has-text-centered">
+        <div class="column">
+        </div>
+        <div class="column">
+          <b><p class="has-text-success">LNP = Likely Non-Pathogenic<br>NP = Non-Pathogenic</p></b>
+        </div>
+        <div class="column">
+          <b><p class="has-text-warning">U = Unknown</p></b>
+        </div>
+        <div class="column">
+          <b><p class="has-text-danger">LP = Likely Pathogenic<br>P = Pathogenic</p></b>
+        </div>
+        <div class="column">
+        </div>
+      </div>
       <div class="table-container">
-        <table class="table is-hoverable is-narrow">
+        <table class="table is-hoverable is-narrow center">
           <tr>
-            <th>ID</th>
-            <th>Gene</th>
-            <th>Pattern</th>
-            <th>Pathological Motif Match</th>
-            <th>Pathological Min</th>
+            <th title="Unique Result ID">ID</th>
+            <th title="Gene Name">Gene</th>
+            <th title="Pattern identified by the Phaser">Pattern</th>
+            <th title="Matching Motif found in the database associated with this Gene">Pathological Motif Match</th>
+            <!--th>Pathological Min</th>
             <th>Pathological Max</th>
-            <th>Number of repeats</th>
-            <th>Allele</th>
-            <th>Phaser</th>
-            <th>Category</th>
+            <th>Number of repeats</th-->
+            <th title="The Allele the pattern was found on, according to the Phaser">Allele</th>
+            <th title="Phasing method">Phaser</th>
+            <th title="Pathogenicity, according to the number of repeats found compared to pathological maximum and minimum repeats associated with the matching motif">Category</th>
+            <th title="Assigned Diagnosis of the Gene">Diagnosis</th>
+            <th title="Assigned Status of the Gene">Status</th>
           </tr>
           {% for result in results %}
           <tr>
             <td><a href="/result/{{result[0]}}">{{result[0]}}</a></td>
             <td><a href="/{{sample}}/{{result[1]}}">{{result[1]}}</a></td>
             <td>{{result[2]}}</td>
-            <td>{{result[3]}}</td>
-            <td>{{result[4]}}</td>
+            {% if not result[3]%}
+                <td title="No match found."></td>
+            {% else %}
+                <td>{{result[3]}}</td>
+            {% endif %}
+            <!--td>{{result[4]}}</td>
             <td>{{result[5]}}</td>
-            <td>{{result[6]}}</td>
+            <td>{{result[6]}}</td-->
             <td>{{result[7]}}</td>
             <td>{{result[8]}}</td>
             {% if result[9] == 'Likely Pathogenic' %}
-            <td class="is-danger">{{result[9]}}</td>
+            <td class="has-background-danger-light has-text-danger" title="Likely Pathogenic">LP</td>
             {% elif result[9] == 'Unknown' %}
-            <td class="is-warning">{{result[9]}}</td>
+            <td class="has-background-warning-light" title="Unknown">U</td>
             {% elif result[9] == 'Likely Non-Pathogenic' %}
-            <td class="is-success">{{result[9]}}</td>
+            <td class="has-background-success-light has-text-success" title="Likely Non-Pathogenic">LNP</td>
             {% else %}
             <td></td>
+            {% endif %}
+            {% if result[10] == 'Pathogenic' %}
+            <td class="is-danger" title="Pathogenic">P</td>
+            {% elif result[10] == 'Unknown' %}
+            <td class="is-warning" title="Unknown">U</td>
+            {% elif result[10] == 'Non-Pathogenic' %}
+            <td class="is-success" title="Non-Pathogenic">NP</td>
+            {% else %}
+            <td title="Not diagnosed yet"></td>
+            {% endif %}
+            {% if result[11] == "In Progress"%}
+                <td class="has-text-warning">In Progress</td>
+            {% elif result[11] == "Complete" %}
+                <td class="has-text-success">Complete</td>
+            {% elif result[11] == "Error" %}
+                <td class="has-text-danger">Error</td>
+            {% else %}
+                <td></td>
             {% endif %}
           </tr>
           {% endfor %}

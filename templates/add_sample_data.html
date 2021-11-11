@@ -5,11 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>HAMSTR-WHL add sample data</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.css">
+    <link rel="stylesheet" href="/static/style.css">
     <style>
-      table{
-      margin-left:auto;
-      margin-right:auto;
-      }
       .table td {
       border: none;
       }
@@ -19,7 +16,8 @@
   <body>
     <section class="section has-text-centered">
       <a href="/">
-        <h1 class="title">HAMSTR-WHL</h1>
+        <img class="logo" src="/static/logo1.png">
+        <h1 class="title is-1">HAMSTR-WHL</h1>
       </a>
     </section>
     <section class="section has-text-centered">
@@ -39,7 +37,7 @@
         <b>Found and added data for the following genes: </b>
       </p>
       <div class="table-container has-text-centred">
-        <table class="table">
+        <table class="table center">
           <tr>
             {% for gene in genes %}
             <td><a href="/{{sample}}/{{gene}}">{{ gene }}</a></td>
