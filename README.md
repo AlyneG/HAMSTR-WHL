@@ -4,7 +4,7 @@ A Web-Helper and LIS (Laboratory Information System) for the output of the HAMST
 ## Starting up
 1. Clone the HAMSTR-WHL git repo.
 ```
-git clone 
+git clone https://github.com/AlyneG/HAMSTR-WHL.git
 ```
 
 2. Navigate into the newly cloned repo and run the database initialisation script.
