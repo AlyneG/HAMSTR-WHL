@@ -210,7 +210,8 @@ def get_sample_results(sample, conn):
                 "LEFT JOIN Gene g ON r.gene = g.id " +
                 "LEFT JOIN Motif m ON r.motif = m.id " +
                 "LEFT JOIN Status s ON s.gene = g.id AND s.sample = r.sample" +
-                " WHERE r.sample LIKE ?", (sample,))
+                " WHERE r.sample LIKE ? " +
+                "ORDER BY g.name ASC", (sample,))
     results = cur.fetchall()
     return results
 
