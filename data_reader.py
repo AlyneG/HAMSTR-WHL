@@ -116,10 +116,10 @@ def add_info(target_dir, conn, file, allele, check, info, cfg):
             if row[0] == 'motif':
                 continue
             # get found pattern, reverse inverse and count
-            empty_file = False
             info["pattern"] = row[0].split('::')[0]
             if len(info["pattern"]) < min_len or len(info["pattern"]) > max_len:
                 continue
+            empty_file = False
             info["rev_inv_pattern"] = row[0].split('::')[1]
             info["count"] = int(row[2])
             # get all motifs associated with the gene
