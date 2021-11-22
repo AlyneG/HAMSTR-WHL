@@ -4,16 +4,18 @@ from sqlite3 import Error
 from data_reader import *
 import os
 import json
+from collections import OrderedDict
 
 app = Flask(__name__)
-
-DATABASE = './database.db'
+with open('config.json', 'r') as f:
+    cfg = json.load(f, object_pairs_hook=OrderedDict)
 
 
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
+
+        db = g._database = sqlite3.connect(cfg["database"])
     return db
 
 
@@ -36,10 +38,10 @@ def close_connection(exception):
 @app.route("/home")
 def home(database=None, count=None):
     file = request.args.get('file')
-    if os.path.isfile(DATABASE):
+    if os.path.isfile(cfg["database"]):
         conn = get_db()
         count = get_sample_count(conn)
-        database = DATABASE
+        database = cfg["database"]
     return render_template("home.html", database=database, count=count,
                            file=file)
 
@@ -54,7 +56,7 @@ def add_data(error=None, genes=None):
         conn = get_db()
         error = check_add_sample(conn, target_dir)
         if error is None:
-            sample, genes = extract_data(target_dir, conn)
+            sample, genes = extract_data(target_dir, conn, cfg)
             return render_template("add_sample_data.html", sample=sample,
                                    genes=genes)
         else:

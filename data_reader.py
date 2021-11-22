@@ -4,8 +4,6 @@ import csv
 import pandas as pd
 import sqlite3
 from sqlite3 import Error
-import json
-from collections import OrderedDict
 
 
 # create a connection to the database
@@ -19,13 +17,11 @@ def create_connection(db_file):
 
 
 # extract the result data from the given directory
-def extract_data(target_dir, conn):
+def extract_data(target_dir, conn, cfg):
     if not os.path.isdir(target_dir):
         conn.close()
         exit()
     else:
-        with open('config.json', 'r') as f:
-            cfg = json.load(f, object_pairs_hook=OrderedDict)
         genes = []
         for dirpath in os.listdir(target_dir):
             # find each gene directory

@@ -1,6 +1,8 @@
 import sqlite3
 from sqlite3 import Error
 import csv
+import json
+from collections import OrderedDict
 from data_reader import get_gene_id
 
 
@@ -14,7 +16,9 @@ def create_connection(db_file):
 
 
 def main():
-    conn = create_connection('./database.db')
+    with open('config.json', 'r') as f:
+        cfg = json.load(f, object_pairs_hook=OrderedDict)
+    conn = create_connection(cfg["database"])
     cur = conn.cursor()
     cur.execute("DELETE FROM Gene;")
     cur.execute("DELETE FROM Motif;")
@@ -22,7 +26,10 @@ def main():
     genes = open("data/genes.tsv")
     read_genes = csv.reader(genes, delimiter="\t")
     for row in read_genes:
-        cur.execute("INSERT INTO Gene (name, chromosome, phenotype, inheritanceMode, startCoordHG38, endCoordHG38) VALUES (?, ?, ?, ?, ?, ?)", (row[0], row[1], row[2], row[3], row[4], row[5]))
+        cur.execute("INSERT INTO Gene (name, chromosome, phenotype, " +
+                    "inheritanceMode, startCoordHG38, endCoordHG38) VALUES " +
+                    "(?, ?, ?, ?, ?, ?)",
+                    (row[0], row[1], row[2], row[3], row[4], row[5]))
     genes.close()
 
     motifs = open("data/motifs.tsv")
@@ -30,9 +37,10 @@ def main():
     for row in read_motifs:
         gene_id = get_gene_id(conn, row[0])
         if gene_id is not None:
-            cur.execute("INSERT INTO Motif (gene, pattern, size, pathMin, pathMax) VALUES (?, ?, ?, ?, ?)", (gene_id, row[1], row[2], row[3], row[4]))
+            cur.execute("INSERT INTO Motif (gene, pattern, size, pathMin, " +
+                        "pathMax) VALUES (?, ?, ?, ?, ?)",
+                        (gene_id, row[1], row[2], row[3], row[4]))
     motifs.close()
-    # put in a try catch?
     conn.commit()
     conn.close()
 

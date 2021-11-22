@@ -1,4 +1,5 @@
 {
+    "database": "./database.db",
     "phasers": ["unphased", "longshot", "sniffles"],
     "phased": ["longshot", "sniffles"],
     "min_pattern_length": 3,
