@@ -33,12 +33,15 @@ def close_connection(exception):
 
 
 @app.route("/")
+@app.route("/home")
 def home(database=None, count=None):
+    file = request.args.get('file')
     if os.path.isfile(DATABASE):
         conn = get_db()
         count = get_sample_count(conn)
         database = DATABASE
-    return render_template("home.html", database=database, count=count)
+    return render_template("home.html", database=database, count=count,
+                           file=file)
 
 
 @app.route("/add-data", methods=["GET", "POST"])
@@ -101,7 +104,8 @@ def get_sample(sample):
             if(num_genes == 0):
                 search_error = "No results found matching the gene " + gene
             if(num_genes == 1):
-                return redirect(url_for('get_gene', sample=sample, gene=gene_results[0]))
+                return redirect(url_for('get_gene', sample=sample,
+                                        gene=gene_results[0]))
         else:
             search_error = "Please enter a gene to search for"
     results = get_sample_results(sample, conn)
@@ -110,6 +114,13 @@ def get_sample(sample):
     return render_template("sample_page.html", sample=sample, results=results,
                            error=error, search_error=search_error,
                            gene_results=gene_results)
+
+
+@app.route("/delete/<sample>", methods=["POST", "GET"])
+def del_sample(sample):
+    conn = get_db()
+    if delete_sample(conn, sample):
+        return redirect(url_for('home'))
 
 
 @app.route("/<sample>/<gene>", methods=["POST", "GET"])
@@ -136,7 +147,7 @@ def get_gene(sample, gene):
                                error=error)
     results = get_sample_gene_results(sample, gene, conn)
     if not results:
-        error = "No results found for " + sample + " " + gene
+        error = "No results found for gene " + gene + " for sample " + sample
         return render_template("gene_page.html", sample=sample, gene=gene,
                                error=error, gene_info=gene_info,
                                results=results)
@@ -172,6 +183,20 @@ def get_result(result):
                            count=json.dumps(count),
                            lower_bound=json.dumps(lower_bound),
                            upper_bound=json.dumps(upper_bound))
+
+
+@app.route("/save-notes", methods=["GET", "POST"])
+def save_notes():
+    conn = get_db()
+    notes_to_tsv(conn)
+    return redirect(url_for('home', file="notes.tsv"))
+
+
+@app.route("/save-statuses", methods=["GET", "POST"])
+def save_statuses():
+    conn = get_db()
+    statuses_to_tsv(conn)
+    return redirect(url_for('home', file="statuses.tsv"))
 
 
 if __name__ == '__main__':

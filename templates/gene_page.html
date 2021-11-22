@@ -18,9 +18,13 @@
       	if (form.style.display === "none") {
       		form.style.display = "block";
       		toggle.innerHTML = "Cancel"
+            toggle.classList.remove("is-success")
+            toggle.classList.add("is-danger")
       	} else {
       		form.style.display = "none";
       		toggle.innerHTML = "Add Note"
+            toggle.classList.remove("is-danger")
+            toggle.classList.add("is-success")
       	}
       }
       function toggle_edit() {
@@ -29,9 +33,13 @@
       	if (form.style.display === "none") {
       		form.style.display = "block";
       		toggle.innerHTML = "Cancel"
+            toggle.classList.remove("is-success")
+            toggle.classList.add("is-danger")
       	} else {
       		form.style.display = "none";
       		toggle.innerHTML = "Edit Status"
+            toggle.classList.remove("is-danger")
+            toggle.classList.add("is-warning")
       	}
       }
     </script>
@@ -95,9 +103,10 @@
                     <th title="Unique Result ID">ID</th>
                     <th title="Pattern identified by the Phaser">Pattern</th>
                     <th title="Matching Motif found in the database associated with this Gene">Pathological Motif Match</th>
+                    <th title="Number of repeats of the pattern found in the sample">Num Repeats</th>
                     <th title="Minimum bound of repeats for Pathogenicity">Pathological Min</th>
                     <th title="Maximum bound of repeats for Pathogenicity">Pathological Max</th>
-                    <th title="Number of repeats of the pattern found in the sample">Num Repeats</th>
+                    <th title="Percentage of the sequence that matches the motif">Match %</th>
                     <th title="The Allele the pattern was found on, according to the Phaser">Allele</th>
                     <th title="Phasing method">Phaser</th>
                     <th title="Pathogenicity, according to the number of repeats found compared to pathological maximum and minimum repeats associated with the matching motif">Category</th>
@@ -112,12 +121,13 @@
                 <td>{{result[5]}}</td>
                 <td>{{result[6]}}</td>
                 <td>{{result[7]}}</td>
-                {% if result[8] == 'Likely Pathogenic' %}
-                <td class="has-background-danger-light has-text-danger">{{result[8]}}</td>
-                {% elif result[8] == 'Unknown' %}
-                <td class="has-background-warning-light">{{result[8]}}</td>
-                {% elif result[8] == 'Likely Non-Pathogenic' %}
-                <td class="has-background-success-light has-text-success">{{result[8]}}</td>
+                <td>{{result[8]}}</td>
+                {% if result[9] == 'Likely Pathogenic' %}
+                <td class="has-background-danger-light has-text-danger">{{result[9]}}</td>
+                {% elif result[9] == 'Unknown' %}
+                <td class="has-background-warning-light">{{result[9]}}</td>
+                {% elif result[9] == 'Likely Non-Pathogenic' %}
+                <td class="has-background-success-light has-text-success">{{result[9]}}</td>
                 {% else %}
                 <td></td>
                 {% endif %}
@@ -154,7 +164,7 @@
                     <td></td>
                 {% endif %}
             </table>
-            <button class="button" onclick="toggle_edit()" id="edit_toggle">Edit Status</button>
+            <button class="button is-warning is-light" onclick="toggle_edit()" id="edit_toggle">Edit Status</button>
             <br><br>
             <div id="status_form" style="display: none">
               <form method="POST">
@@ -183,13 +193,13 @@
                   </div>
                 </div>
                 <div class="field has-text-right">
-                  <button class="button" value="Update Status" name="submit" type="submit" formmethod="post">Update</button>
+                  <button class="button is-info is-light" value="Update Status" name="submit" type="submit" formmethod="post">Update</button>
                 </div>
               </form>
             </div>
             <br>
             <h1 class="title is-4">Notes</h1>
-            <button class="button" onclick="toggle_note()" id="note_toggle">Add Note</button>
+            <button class="button is-success is-light" onclick="toggle_note()" id="note_toggle">Add Note</button>
             <br><br>
             <div id="note_form" style="display: none">
               <form method="POST">
@@ -200,7 +210,7 @@
                   </div>
                 </div>
                 <div class="field has-text-right">
-                  <button class="button" name="submit" value="Add Note" type="submit" formmethod="post">Add</button>
+                  <button class="button is-success is-light" name="submit" value="Add Note" type="submit" formmethod="post">Add</button>
                 </div>
               </form>
               <br>

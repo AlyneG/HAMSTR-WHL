@@ -12,7 +12,16 @@
       margin-right: auto;
       }
     </style>
-    <script></script>
+    <script>
+    function show_modal() {
+      var modal = document.getElementById("delete_modal");
+      modal.classList.add("is-active")
+    }
+    function hide_modal(){
+      var modal = document.getElementById("delete_modal");
+      modal.classList.remove("is-active")
+    }
+    </script>
   </head>
   <body>
     <section class="section has-text-centered">
@@ -27,6 +36,24 @@
       <a href="/search"><button class="button">Return to Search</button></a>
       {% elif results %}
       <a href="/search"><button class="button">Return to Search</button></a>
+      <button class="button is-danger" onclick=show_modal()>Delete</button>
+      <div id=delete_modal class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+          <header class="modal-card-head">
+            <p class="modal-card-title">Delete Sample</p>
+            <button class="delete" aria-label="close" onclick=hide_modal()></button>
+          </header>
+          <section class="modal-card-body">
+            <p>Are you sure you'd like to delete sample {{sample}}?</p>
+          </section>
+          <footer class="modal-card-foot">
+            <a href="/delete/{{sample}}"><button class="button is-danger">Confirm Delete</button></a>
+            &nbsp
+            <button class="button" onclick=hide_modal()>Cancel</button>
+          </footer>
+        </div>
+      </div>
       <br><br><br>
       <h1 class="title is-3">{{sample}}</h1>
       <p>
@@ -38,7 +65,7 @@
       <form method="POST">
         <h1 class="title is-5">Gene Search</h1>
         <input type="text" class="input" style="width:33%;" id="gene" name="gene" placeholder="Enter a Gene">
-        <input type="submit" class="button" value="Search">
+        <input type="submit" class="button is-info" value="Search">
       </form>
       {% if search_error %}
       <br>

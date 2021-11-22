@@ -33,13 +33,22 @@
       {% if database %}
       <p> Connected to database {{database}} </p>
       <p> Number of Samples in the database: {{count[0]}} </p>
+      <br>
+      <a href="/save-notes"><button class="is-small button is-info is-light">Save Notes</button></a>
+      &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+      <a href="/save-statuses"><button class="is-small button is-info is-light">Save Status</button></a>
+      {% if file %}
+      <br><br>
+      <p class="has-text-success">Successfully saved file {{file}}</p>
+      {% endif %}
       <br><br><br>
-      <a href="/add-data"><button class="button">Add Sample Data</button></a>
-      <a href="/search"><button class="button">Search Sample Data</button></a>
+      <a href="/add-data"><button class="button is-success">Add Sample Data</button></a>
+      &nbsp&nbsp
+      <a href="/search"><button class="button is-info">Search Sample Data</button></a>
       {% else %}
       <p class="has-text-danger"> Please create a database to connect to. </p>
       {% endif %}
-      <br><br><br><br><button class="button is-info is-light" onclick="toggle_help()" id="help_toggle">Help</button>
+      <br><br><br><br><button class="button is-info is-light is-small" onclick="toggle_help()" id="help_toggle">Help</button>
       <div class="columns">
         <div class="column is-one-third">
         </div>
@@ -50,7 +59,15 @@
             <p> Run the script ./initialise_db.sh in your working folder.
               This should create a database called database.db.
               The database should then automatically connect to the web application.
-            <p>
+            </p>
+            <br>
+            <h1 class="subtitle"> Save Notes </h1>
+            <p> The "Save Notes" button saves all the notes in the database to a tsv file named "notes.tsv".
+            </p>
+            <br>
+            <h1 class="subtitle"> Save Status </h1>
+            <p> The "Save Status" button saves all the assigned statuses, including the diagnoses, of all genes in the database to a tsv file named "statuses.tsv".
+            </p>
           </div>
         </div>
         <div class="column is-one-third">

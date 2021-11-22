@@ -58,7 +58,7 @@ CREATE TABLE Result (
 
 CREATE TABLE Note (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	sample VARCHAR(20),
+	sample INTEGER,
 	gene INTEGER,
 	note TEXT,
 	FOREIGN KEY (sample) REFERENCES Sample(id),

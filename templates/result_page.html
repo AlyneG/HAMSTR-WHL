@@ -36,9 +36,11 @@
           <tr>
             <td><b>Sample: </b></td>
             <td><a href="/sample/{{result_info[0]}}">{{result_info[0]}}</a></td>
+          </tr>
           <tr>
             <td><b>Gene: </b></td>
             <td><a href="/{{result_info[0]}}/{{result_info[1]}}">{{result_info[1]}}</a></td>
+          </tr>
           <tr>
             <td><b>Pattern: </b></td>
             <td>{{result_info[2]}}</td>
@@ -46,17 +48,38 @@
           <tr>
             <td><b>Phasing method: </b></td>
             <td>{{result_info[3]}}</td>
-          <tr>
+          </tr>
             {% if result_info[3] != 'unphased'%}
-          <tr>
-            <td><b>Allele: </b></td>
-            <td>{{result_info[4]}}</td>
-          <tr>
+              <tr>
+                <td><b>Allele: </b></td>
+                <td>{{result_info[4]}}</td>
+              </tr>
             {% endif %}
           <tr>
             <td><b>Repeat count: </b></td>
             <td>{{result_info[5]}}</td>
+          </tr>
           <tr>
+            <td><b>Match %: </b></td>
+            <td>{{result_info[10]}}</td>
+          </tr>
+          <tr>
+            <td><b>Score: </b></td>
+            <td>{{result_info[11]}}</td>
+          </tr>
+          <tr>
+            <td><b>Sequence: </b></td>
+            <td>
+            {% if result_info[12] %}
+                {% for letter in result_info[12]%}
+                  {{letter}}
+                  {% if loop.index is divisibleby ((result_info[2]|length)*2) %}
+                    <br>
+                  {% endif %}
+                {% endfor %}
+            {% endif %}
+            </td>
+          </tr>
         </table>
       </div>
       {% if result_info[6] is not none %}
@@ -71,7 +94,7 @@
         ctx.stroke();
         ctx.font = "20px Arial";
         var low = {{motif_lo|safe}};
-        var count = {{count|safe}};
+        var count = Math.round({{count|safe}});
         var high = {{motif_hi|safe}};
         var l_bound = {{lower_bound|safe}};
         var u_bound = {{upper_bound|safe}};
